@@ -6,7 +6,7 @@ FROM continuumio/miniconda3:latest
 
 RUN conda create -n cdujlab networkit networkx h5py pip ipykernel ipywidgets pandas geopandas jupyterlab nb_conda_kernels jupyter_contrib_nbextensions ipysheet -c conda-forge -y 
 
-RUN conda activate cdujlab
+#RUN conda activate cdujlab
 RUN git clone https://github.com/ComputationalEcologyLab/CDPOP.git && git clone https://github.com/ComputationalEcologyLab/UNICOR.git 
 
 RUN mkdir /opt/notebooks 
