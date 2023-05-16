@@ -17,7 +17,7 @@ RUN pwd
 #RUN conda activate cdujlab
 RUN git clone https://github.com/ComputationalEcologyLab/CDPOP.git /dockerdata/CDPOP && git clone https://github.com/ComputationalEcologyLab/UNICOR.git /dockerdata/UNICOR
 
-RUN wget https://raw.githubusercontent.com/rbachati/cdpop_mui/main/test.py /dockerdata/test.py
+#RUN wget https://raw.githubusercontent.com/rbachati/cdpop_mui/main/test.py /dockerdata/test.py
 
 
 RUN pip install pandas ipywidgets ipysheet streamlit
