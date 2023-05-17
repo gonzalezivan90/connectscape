@@ -14,6 +14,8 @@ You need for your analysis:
 2. Raster of resistances
 3.  ... TBC
 
+![image](https://github.com/gonzalezivan90/connectscape/blob/main/install/steps.png?raw=true)
+
 ## Close and relaunch:
 The app will be "alive" until you explictly stop the container. You can stop the CONTAINER_NAME (cdpop) by clicking the "stop" buttom on Docker desktop window.
 Other option is typing `docker stop cdpop`
@@ -26,14 +28,10 @@ If you have problems, please assess the following stages:
 - Docker works. Go to the command line (open it by Windows key + R, type `cmd` and hit enter, or find "system symbols" on your windows menu). On the black or blue console, type `docker` and should return the following message:
 
 `Usage:  docker [OPTIONS] COMMAND`
-
 `A self-sufficient runtime for containers`
-
 `Options:`
-
-      `--config string      Location of client config files (default`
-      
-   `                        "C:\\Users\\Admin\\.docker") ... `
+      `--config string      Location of client config files (default`   
+                           `"C:\\Users\\Admin\\.docker") ... `
                               
 That means you have docker installed.
 
