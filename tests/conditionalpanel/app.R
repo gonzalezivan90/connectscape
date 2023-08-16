@@ -56,8 +56,10 @@ ui <- dashboardPage(
                 
                 conditionalPanel(
                   'input.sidebarid == "tab_corridors"',
-                  sliderInput("bins", "Number of bins:", min = 1, max = 50, value = 30),
-                  selectInput("title", "Select plot title:", choices = c("Hist of x", "Histogram of x"))
+                    shiny::fileInput('in_corrpoints', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
+                                     accept=c('.csv','.txt'), multiple=FALSE),
+                    shiny::fileInput('in_corrsurface', 'Load surface file', buttonLabel = 'Search', placeholder = 'No choose',
+                                     accept=c('.csv','.txt'), multiple=FALSE)
                 ),
                 
                 # conditionalPanel(

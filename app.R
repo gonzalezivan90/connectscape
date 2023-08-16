@@ -1,3 +1,4 @@
+system('cd /home/shiny/connectscape/; git add . ; git commit -m "some edits"; git push')
 {
   library(bit) #
   library(digest)
@@ -40,6 +41,8 @@
 # UI  ---------------
 ui <- dashboardPage( 
   skin = 'green', 
+  
+  # UI header  ---------------
   dashboardHeader( 
     ## UI Tags ------------------------------
     # tags$li(a(href = 'https://goetzlab.rc.nau.edu/', target="_blank",
@@ -51,24 +54,52 @@ ui <- dashboardPage(
     ## UI sidebar ------------------------------
   ), ## End class
   
-  # UI Panel  ---------------
-  dashboardSidebar(
-    #disable = FALSE,
-    sidebarMenu(id = "sidebarid",
-                #menuItem("Profiles L2b", tabName = "tab_profile2", startExpanded = TRUE,#),
-                #https://fontawesome.com/search?q=map&o=r&m=free
-                
-                # 
-                # menuItem("Home", tabName = "tabhome", icon = icon("house-user")),
-                # menuItem("Habitat suitability <>\nresistance surface", tabName = "tabsurface", icon = icon("map-pin")),
-                menuItem("Page 1", tabName = "page1"),
-                menuItem("Page 2", tabName = "page2"),
-                conditionalPanel(
-                  'input.sidebarid == "page2"',
-                  sliderInput("bins", "Number of bins:", min = 1, max = 50, value = 30),
-                  selectInput("title", "Select plot title:", choices = c("Hist of x", "Histogram of x"))
-                )
-                
+  
+  # UI Sidebar  ---------------
+    
+  #disable = FALSE,
+    
+    #https://fontawesome.com/search?q=map&o=r&m=free
+    dashboardSidebar(
+      sidebarMenu(id = "sidebarid",
+                  menuItem("Home", tabName = "tabhome", icon = icon("house-user")),
+                  menuItem("Habitat suitability <>\nresistance surface", tabName = "tabsurface", icon = icon("map-pin")),
+                  menuItem("Create source points", tabName = "tab_points", icon = icon("map-pin")),
+                  menuItem("Cost distance matrix", tabName = "tab_distance", icon = icon("border-all")),
+                  menuItem("CDPOP", tabName = "tab_cdpop", icon = icon("hippo")),
+                  menuItem("Connectivity - corridors", tabName = "tab_corridors", icon = icon("route")),
+                  
+                  conditionalPanel(
+                    'input.sidebarid == "tab_corridors"',
+                    shiny::fileInput('in_corrpoints', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
+                                     accept=c('.csv','.txt'), multiple=FALSE),
+                    shiny::fileInput('in_corrsurface', 'Load surface file', buttonLabel = 'Search', placeholder = 'No choose',
+                                     accept=c('.csv','.txt'), multiple=FALSE)
+                  ),
+                  
+                  # conditionalPanel(
+                  #   'input.sidebarid %in% c("tab_kernels", "tab_plotting")',
+                  #   shiny::fileInput('in_corrpoints', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
+                  #                    accept=c('.csv','.txt'), multiple=FALSE),
+                  #   shiny::fileInput('in_corrsurface', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
+                  #                    accept=c('.csv','.txt'), multiple=FALSE)
+                  # ),
+                  menuItem("Connectivity - dispersal kernels", tabName = "tab_kernels", icon = icon("bezier-curve")),
+                  menuItem("Plotting", tabName = "tab_plotting", icon = icon("image")),
+                  menuItem("Mapping", tabName = "tab_Mapping", icon = icon("map")),
+                  menuItem("Connectivity - prioritization", tabName = "tab_priori", icon = icon("trophy")),
+                  menuItem("Landscape genetics mapping tools", tabName = "tab_genetics", icon = icon("route")),
+                  menuItem("Run locally", tabName = "tablocal", icon = icon("code-fork")),
+                  
+                  menuItem("Page 1", tabName = "page1"),
+                  conditionalPanel(
+                    'input.sidebarid == "page1"',
+                    sliderInput("bins", "Number of bins:", min = 1, max = 50, value = 30),
+                    selectInput("title", "Select plot title:", choices = c("Hist of x", "Histogram of x"))
+                  ),
+                  menuItem("Page 2", tabName = "page2")
+                  
+      
                 # menuItem("Create source points", tabName = "tab_points", icon = icon("map-pin")),
                 # menuItem("Cost distance matrix", tabName = "tab_distance", icon = icon("border-all")),
                 # menuItem("CDPOP", tabName = "tab_cdpop", icon = icon("hippo")),
@@ -125,11 +156,9 @@ ui <- dashboardPage(
                 #   shiny::fileInput('in_corrsurface', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
                 #                    accept=c('.csv','.txt'), multiple=FALSE)
                 # ),
-                
-                
-                
     )
   ),
+  
   # 
   # rightsidebar = rightSidebar(
   #   background = "dark",
