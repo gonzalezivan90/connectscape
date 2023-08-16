@@ -9,7 +9,7 @@
   library(leaflet)
   library(leaflet.extras)
   library(knitr)
-  #library(rgl) #
+  library(rgl) #
   library(magrittr)
   #library(mongolite)#
   library(raster)
@@ -53,26 +53,82 @@ ui <- dashboardPage(
   
   # UI Panel  ---------------
   dashboardSidebar(
-    disable = FALSE,
-    sidebarMenu(
+    #disable = FALSE,
+    sidebarMenu(id = "sidebarid",
+                #menuItem("Profiles L2b", tabName = "tab_profile2", startExpanded = TRUE,#),
+                #https://fontawesome.com/search?q=map&o=r&m=free
+                
+                # menuItem("Home", tabName = "tabhome", icon = icon("house-user")),
+                # 
+                # menuItem("Habitat suitability <>\nresistance surface", tabName = "tabsurface", icon = icon("map-pin")),
+                menuItem("Page 1", tabName = "page1"),
+                menuItem("Page 2", tabName = "page2"),
+                conditionalPanel(
+                  'input.sidebarid == "page2"',
+                  sliderInput("bins", "Number of bins:", min = 1, max = 50, value = 30),
+                  selectInput("title", "Select plot title:", choices = c("Hist of x", "Histogram of x"))
+                )
+                
+                # menuItem("Create source points", tabName = "tab_points", icon = icon("map-pin")),
+                # menuItem("Cost distance matrix", tabName = "tab_distance", icon = icon("border-all")),
+                # menuItem("CDPOP", tabName = "tab_cdpop", icon = icon("hippo")),
+                # menuItem("Connectivity - corridors", tabName = "tab_corridors", icon = icon("route")),
+                # menuItem("Connectivity - dispersal kernels", tabName = "tab_kernels", icon = icon("bezier-curve")),
+                # menuItem("Plotting", tabName = "tab_plotting", icon = icon("image")),
+                # menuItem("Mapping", tabName = "tab_Mapping", icon = icon("map")),
+                # menuItem("Connectivity - prioritization", tabName = "tab_priori", icon = icon("trophy")),
+                # menuItem("Landscape genetics mapping tools", tabName = "tab_genetics", icon = icon("route")),
+                # menuItem("Run locally", tabName = "tablocal", icon = icon("code-fork"))
+                
+                
+      # conditionalPanel(
+      #   'input.sidebarid == "tab_surface"',
+      #   # Shapefile
+      #   shiny::fileInput('in_surface', 'Load resistance grid S', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.tif', '.rsg'), multiple = FALSE)
+      # )
       
-      #menuItem("Profiles L2b", tabName = "tab_profile2", startExpanded = TRUE,
-      #),
+      # conditionalPanel(
+      #   'input.sidebarid == "tab_points"',
+      #   # Shapefile
+      #   shiny::fileInput('in_points', 'Load point file P', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.xy'),
+      #                    multiple=TRUE)),
+      # conditionalPanel(
+      #   'input.sidebarid == "tab_distance"',
+      #   shiny::fileInput('in_points', 'Load point file', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.xy'),
+      #                    multiple=TRUE)
+      #   ),
+      # conditionalPanel(
+      #   'input.sidebarid %in% "tab_cdpop"',
+      #   shiny::fileInput('in_cdpop', 'Load parameter file C', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.csv','.txt'), multiple=FALSE)
+      # ),
+      # 
+      # conditionalPanel(
+      #   'input.sidebarid == "tab_corridors"',
+      #   shiny::fileInput('in_corrpoints', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.csv','.txt'), multiple=FALSE)
+      # ),
+      # 
+      # conditionalPanel(
+      #   'input.sidebarid == "tab_corridors"',
+      #   shiny::fileInput('in_corrsurface', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.csv','.txt'), multiple=FALSE)
+      # ),
+      # 
+      # conditionalPanel(
+      #   'input.sidebarid %in% c("tab_kernels", "tab_plotting")',
+      #   shiny::fileInput('in_corrpoints', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.csv','.txt'), multiple=FALSE),
+      #   shiny::fileInput('in_corrsurface', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.csv','.txt'), multiple=FALSE)
+      # ),
       
-      #https://fontawesome.com/search?q=map&o=r&m=free
-      
-      menuItem("Home", tabName = "tab_profile", icon = icon("house-user")),
-      menuItem("Source points", tabName = "tab_similarity", icon = icon("map-pin")),
-      menuItem("Cost distance matrix", tabName = "tab_similarity", icon = icon("border-all")),
-      menuItem("CDPOP", tabName = "tab_similarity", icon = icon("hippo")),
-      menuItem("UNICOR", tabName = "tab_similarity", icon = icon("route")),
-      menuItem("Plotting", tabName = "tab_similarity", icon = icon("image")),
-      menuItem("Mapping", tabName = "tab_similarity", icon = icon("map")),
-      menuItem("Run locally", tabName = "tab_similarity", icon = icon("code-fork"))
       
       
     )
-    
   ),
   # 
   # rightsidebar = rightSidebar(
@@ -84,11 +140,43 @@ ui <- dashboardPage(
   dashboardBody( 
     
     tabItems(
-      ######## UI GEDI viz ------------
+      
+      # page 1 ----
+      tabItem(tabName = "page1", "Page 1 content. This page doesn't have any sidebar menu items."),
+      # page 2 ----
+      tabItem(tabName = "page2", 
+              "Page 2 content. This page has sidebar meny items that are used in the plot below.",
+              br(), br(),
+              plotOutput("distPlot")),
+      ######## UI viz ------------
       
       # tab_workgedi, tab_gedi, tab_worksimi, tab_similarity
-      tabItem('tab_workgedi', fluidPage(includeMarkdown("md_intro.md"))),
-      tabItem('tab_gedi', 
+      
+      # tab_home
+      # tab_surface
+      # tab_points
+      # tab_distance
+      # tab_cdpop
+      # tab_cdpop
+      # tab_corridors
+      # tab_kernels
+      # tab_plotting
+      # tab_Mapping
+      # tab_priori
+      # tab_genetics
+      # tab_local
+      
+      tabItem('tab_home', 
+              fluidPage(
+                #includeMarkdown("md_intro.md")
+                tabsetPanel(type = "pills",
+                            tabPanel("Home", plotOutput("plot")),
+                            tabPanel("Performance", verbatimTextOutput("summary")),
+                            tabPanel("Showcase", tableOutput("table"))
+                )
+              )),
+      
+      tabItem('tab_surface', 
               # tabBox(  width = NULL,
               #   tabsetPanel(  type = 'pills',
               #     tabPanel( id = 'tab_intros', 
