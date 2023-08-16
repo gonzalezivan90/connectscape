@@ -81,53 +81,53 @@ ui <- dashboardPage(
                 # menuItem("Run locally", tabName = "tablocal", icon = icon("code-fork"))
                 
                 
-                # conditionalPanel(
-                #   'input.sidebarid == "tab_surface"',
-                #   # Shapefile
-                #   shiny::fileInput('in_surface', 'Load resistance grid S', buttonLabel = 'Search', placeholder = 'No choose',
-                #                    accept=c('.tif', '.rsg'), multiple = FALSE)
-                # )
-                
-                # conditionalPanel(
-                #   'input.sidebarid == "tab_points"',
-                #   # Shapefile
-                #   shiny::fileInput('in_points', 'Load point file P', buttonLabel = 'Search', placeholder = 'No choose',
-                #                    accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.xy'),
-                #                    multiple=TRUE)),
-                # conditionalPanel(
-                #   'input.sidebarid == "tab_distance"',
-                #   shiny::fileInput('in_points', 'Load point file', buttonLabel = 'Search', placeholder = 'No choose',
-                #                    accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.xy'),
-                #                    multiple=TRUE)
-                #   ),
-                # conditionalPanel(
-                #   'input.sidebarid %in% "tab_cdpop"',
-                #   shiny::fileInput('in_cdpop', 'Load parameter file C', buttonLabel = 'Search', placeholder = 'No choose',
-                #                    accept=c('.csv','.txt'), multiple=FALSE)
-                # ),
-                # 
-                # conditionalPanel(
-                #   'input.sidebarid == "tab_corridors"',
-                #   shiny::fileInput('in_corrpoints', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
-                #                    accept=c('.csv','.txt'), multiple=FALSE)
-                # ),
-                # 
-                # conditionalPanel(
-                #   'input.sidebarid == "tab_corridors"',
-                #   shiny::fileInput('in_corrsurface', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
-                #                    accept=c('.csv','.txt'), multiple=FALSE)
-                # ),
-                # 
-                # conditionalPanel(
-                #   'input.sidebarid %in% c("tab_kernels", "tab_plotting")',
-                #   shiny::fileInput('in_corrpoints', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
-                #                    accept=c('.csv','.txt'), multiple=FALSE),
-                #   shiny::fileInput('in_corrsurface', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
-                #                    accept=c('.csv','.txt'), multiple=FALSE)
-                # ),
-                
-                
-                
+      # conditionalPanel(
+      #   'input.sidebarid == "tab_surface"',
+      #   # Shapefile
+      #   shiny::fileInput('in_surface', 'Load resistance grid S', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.tif', '.rsg'), multiple = FALSE)
+      # )
+      
+      # conditionalPanel(
+      #   'input.sidebarid == "tab_points"',
+      #   # Shapefile
+      #   shiny::fileInput('in_points', 'Load point file P', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.xy'),
+      #                    multiple=TRUE)),
+      # conditionalPanel(
+      #   'input.sidebarid == "tab_distance"',
+      #   shiny::fileInput('in_points', 'Load point file', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.xy'),
+      #                    multiple=TRUE)
+      #   ),
+      # conditionalPanel(
+      #   'input.sidebarid %in% "tab_cdpop"',
+      #   shiny::fileInput('in_cdpop', 'Load parameter file C', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.csv','.txt'), multiple=FALSE)
+      # ),
+      # 
+      # conditionalPanel(
+      #   'input.sidebarid == "tab_corridors"',
+      #   shiny::fileInput('in_corrpoints', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.csv','.txt'), multiple=FALSE)
+      # ),
+      # 
+      # conditionalPanel(
+      #   'input.sidebarid == "tab_corridors"',
+      #   shiny::fileInput('in_corrsurface', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.csv','.txt'), multiple=FALSE)
+      # ),
+      # 
+      # conditionalPanel(
+      #   'input.sidebarid %in% c("tab_kernels", "tab_plotting")',
+      #   shiny::fileInput('in_corrpoints', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.csv','.txt'), multiple=FALSE),
+      #   shiny::fileInput('in_corrsurface', 'Load point file Co', buttonLabel = 'Search', placeholder = 'No choose',
+      #                    accept=c('.csv','.txt'), multiple=FALSE)
+      # ),
+      
+      
+      
     )
   ),
   # 
@@ -426,4 +426,4 @@ shinyApp(ui = ui, server = server)
 # sudo cp /home/vmuser/gedivis /srv/shiny-server/gedivis2 -R
 # sudo cat /var/log/shiny-server/gedivis_
 
-# "ecoID:924" forest Zulias
+# "ecoID:924" forest Zulia
