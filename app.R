@@ -2,7 +2,7 @@
 ## workign version meant to scale by steps
 
 # system('cd /home/shiny/connectscape/; git add . ; git commit -m "some edits"; git push')
-
+# git pull connectscape
 
 {
   library(bit) #
@@ -102,27 +102,17 @@ runCDPOP <- function(py, datapath = tempFolder){
 }
 
 
-runS2RES <- function(py, intif, outtif){
-  cmd_s2res <- paste0(py, ''
-                      
-                      
-                      # python CDPOP.py %userprofile%\dockerdata\CDPOP\data inputvars.csv outAnac1
-                      src <- '/home/shiny/connecting-landscapes/lib/CDPOP/src/CDPOP.py'
-                      datapath <- tempFolder # datapath = tempFolder
-                      vars <- paste0('invars.csv') # Only file name
-                      timeMarkCDPOP <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE))
-                      cdpopPath <- paste0('cdpopout_', timeMarkCDPOP, '__')
-                      cdpopPath <- 'cdpopout'
-                      (cmd <- paste0(py, ' ', src, ' ', datapath, ' ', vars, ' ', cdpopPath))
-                      
-                      # setwd(tempFolder)
-                      #file.copy('inputvars.csv', 'in.csv')
-                      #file.copy('xyA.csv', 'xy.csv')
-                      #intCMD <- tryCatch(system(cmd, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
-                      
-                      newFiles <- list.files(path = tempFolder, recursive = TRUE)
-                      newFiles <- grep(pattern = cdpopPath, newFiles, value = TRUE)
-                      return(list(newFiles = newFiles, cdpopPath = cdpopPath))
+runS2RES <- function(py, intif, outtif, param1, param2, param3, param4, param5, param6, param7){
+  src <- '/home/shiny/connecting-landscapes/src/s2res.py'
+  datapath <- tempFolder # datapath = tempFolder
+  
+  
+  timeMarkCDPOP <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE))
+  (cmd_s2res <- paste0(py, ' ', src, ' ', datapath, ' ', intif, ' ', outtif, ' ', 
+                 param1, ' ', param2, ' ', param3, ' ', param4, ' ', param5, 
+                 ' ', param6, ' ', param7))
+  
+  return(list(newFiles = newFiles, cdpopPath = cdpopPath))
 }
 
 
@@ -625,7 +615,7 @@ server <- function(input, output, session) {
   
   #### LOAD MAPS ----------------------
   
-  (observeEvent(input$in_sur_tif, {
+  observeEvent(input$in_sur_tif, {
     output$loadMapLL <- renderLeaflet({
       tifpath <- paste0(tempFolder, '/in_surface.tif')
       file.copy(input$in_sur_tif$datapath, tifpath)
@@ -645,8 +635,9 @@ server <- function(input, output, session) {
       #values$total <- values$total + 1
       
       newtif <- raster(newtifPath)
+      rng_newtif <- c(newtif@data@min, newtif@data@max)
       hsPal <<-  colorNumeric(palette = "viridis", reverse = TRUE,
-                              domain = newtif[], na.color = "transparent")
+                              domain = rng_newtif, na.color = "transparent")
       
       leafsurface <<- leaflet() %>% addTiles() %>% 
         addRasterImage(newtif, colors = hsPal, opacity = .7, group = "Habitat suitability") %>%

@@ -180,11 +180,11 @@ ui <- fluidPage(
     sidebarPanel(
       fileInput("file1", "Choose CSV File", accept = ".csv"),
       checkboxInput("header", "Header", TRUE),
-      #actionButton("Splitcolumn", "SplitColumn"),
+      actionButton("Splitcolumn", "SplitColumn"),
       uiOutput("selectUI"),
-      #actionButton("deleteRows", "Delete Rows"),
-      #textInput("textbox", label="Input the value to replace:"),
-      #actionButton("replacevalues", label = 'Replace values'),
+      actionButton("deleteRows", "Delete Rows"),
+      textInput("textbox", label="Input the value to replace:"),
+      actionButton("replacevalues", label = 'Replace values'),
       actionButton("addcolumn", "Add Column"),
       actionButton("removecolumn", "Remove last column"),
       actionButton("Undo", 'Undo')
@@ -217,10 +217,10 @@ server <- function(session, input, output) {
     rv$data <- (rv$orig)
   })
   
-  # output$selectUI<-renderUI({
-  #   req(rv$data)
-  #   selectInput(inputId='selectcolumn', label='select column', choices = names(rv$data))
-  # })
+  output$selectUI<-renderUI({
+    req(rv$data)
+    selectInput(inputId='selectcolumn', label='select column', choices = names(rv$data))
+  })
   
   #splitcolumn
   observeEvent(input$Splitcolumn, {
