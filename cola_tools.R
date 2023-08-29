@@ -207,8 +207,9 @@ ripTemplate <- data.frame(RIP, row.names = gsub(' .+|\t.+', '', RIP) )
 
 
 fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
-  # inrasterpath = 'orig_tifs/size1.tif'
-  # outrasterpath = 'orig_tifs/size1out.tif'
+  # setwd('N:/Mi unidad/git/connecting-landscapes/performance-tests/inputs')
+  # inrasterpath = 'orig_tifs/size5.tif'
+  # outrasterpath = 'size5.tif'
   
   inraster <- inrasterpath
   outraster <- outrasterpath
