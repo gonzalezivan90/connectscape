@@ -212,7 +212,6 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
   
   inraster <- inrasterpath
   outraster <- outrasterpath
-  return(NA)
   
   if( ! (file.exists(inraster) | is.na(inraster) | is.null(inraster)) ){
     stop( print('  >>> Infile not found - ', inraster))
@@ -222,7 +221,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
     outraster <- paste0(tools::file_path_sans_ext(inraster), 'out', 
                         basename(tempfile()) ,'.tif')
   } else {
-    if(file.exists(outraster)){
+    if(!file.exists(outraster)){
       stop( print('  >>> Outfile not found - ', outraster))
     }
   }
@@ -279,6 +278,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
     }
     return(outraster)
   }
+  return(outraster)
 }
 
 
