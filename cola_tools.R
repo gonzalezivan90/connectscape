@@ -12,6 +12,8 @@
 # options(scipen = 9)
 
 
+
+
 tif2rsg <- function(path, outdir = NULL){
   ## Convert TIF files into ASC, then modify header to match RSG format.
   ## Needs the raster path
@@ -71,6 +73,32 @@ Save_IndividualPaths_Output    FALSE
 Save_GraphMetrics_Output    FALSE
 Save_KDE_Output    TRUE
 "
+RIP <- c('Session_label    SESSIONLABEL',
+         'Grid_Filename    RSGFILE',
+         'XY_Filename    XYFILE',
+         'Use_Direction	FALSE',
+         'Type_Direction	TYPEDIRECTION',
+         'Use_Resistance	USERESISTANCE',
+         'Barrier_or_U_Filename	BARRIER',
+         'Direction_or_V_Filename	DIRECTION',
+         'Speed_To_Resistance_Scale	SPEED',
+         'Use_ED_threshold    USEEDTHRESHOLD',
+         'ED_Distance   EDDISTANCE',
+         'Edge_Type	EDGETYPE',
+         'Transform_function	TRANSFUNCTION',
+         'Const_kernal_vol	CONSTKERNALVOL',
+         'Kernel_volume   KERNELVOLUME',
+         'Edge_Distance    EDGEDISTANCE',
+         'Number_of_Processes    NPROCESSES',
+         'KDE_Function    KDEFUNCTION',
+         'KDE_GridSize    KDEGRIDSIZE',
+         'Number_of_Categories    NOFCATEGORIES',
+         'Save_Path_Output    SAVEPATHOUTPUT',
+         'Save_IndividualPaths_Output    SAVEINDIVIDUALPATHSOUTPUTS',
+         'Save_GraphMetrics_Output    SAVEGRAPHS',
+         'Save_KDE_Output    SAVEKDEOUTPUT',
+         'Save_Category_Output    SAVECATEGORYOUTPUT',
+         'Save_CDmatrix_Output    SAVECDMATRIXOUTPUT')
 
 
 createrip <- function(caseName = NULL, Grid_Filename = NULL, XY_Filename = NULL, 
@@ -171,32 +199,7 @@ createrip <- function(caseName = NULL, Grid_Filename = NULL, XY_Filename = NULL,
 
 ripTemplate <- data.frame(RIP, row.names = gsub(' .+|\t.+', '', RIP) )
 
-RIP <- c('Session_label    SESSIONLABEL',
-         'Grid_Filename    RSGFILE',
-         'XY_Filename    XYFILE',
-         'Use_Direction	FALSE',
-         'Type_Direction	TYPEDIRECTION',
-         'Use_Resistance	USERESISTANCE',
-         'Barrier_or_U_Filename	BARRIER',
-         'Direction_or_V_Filename	DIRECTION',
-         'Speed_To_Resistance_Scale	SPEED',
-         'Use_ED_threshold    USEEDTHRESHOLD',
-         'ED_Distance   EDDISTANCE',
-         'Edge_Type	EDGETYPE',
-         'Transform_function	TRANSFUNCTION',
-         'Const_kernal_vol	CONSTKERNALVOL',
-         'Kernel_volume   KERNELVOLUME',
-         'Edge_Distance    EDGEDISTANCE',
-         'Number_of_Processes    NPROCESSES',
-         'KDE_Function    KDEFUNCTION',
-         'KDE_GridSize    KDEGRIDSIZE',
-         'Number_of_Categories    NOFCATEGORIES',
-         'Save_Path_Output    SAVEPATHOUTPUT',
-         'Save_IndividualPaths_Output    SAVEINDIVIDUALPATHSOUTPUTS',
-         'Save_GraphMetrics_Output    SAVEGRAPHS',
-         'Save_KDE_Output    SAVEKDEOUTPUT',
-         'Save_Category_Output    SAVECATEGORYOUTPUT',
-         'Save_CDmatrix_Output    SAVECDMATRIXOUTPUT')
+
 
 #write.table(ripFile, file = 'caseName.rip', col.names = FALSE, row.names = FALSE, quote = FALSE)
 
@@ -277,9 +280,6 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
     return(outraster)
   }
 }
-
-
-
 
 
 
