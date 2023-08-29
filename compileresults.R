@@ -1,4 +1,4 @@
-dataPath <- '/home/shiny/data/'; dir.create(dataPath)
+dataPath <- '/home/shiny/debug/'; dir.create(dataPath)
 unicorPath <- '/home/shiny/UNICOR/unicor/'; list.files(path = unicorPath)
 gitPath <- '/home/shiny/connecting-landscapes/performance-tests/inputs/'; list.files(path = gitPath)
 setwd(dataPath); list.files(path = dataPath)
@@ -412,6 +412,7 @@ ggplot(result,
          linetype=guide_legend(nrow=1,byrow=TRUE))
 #+ lims(y = c(0, 25))
 
+head(result)
 ggplot(result, 
        aes(x = (spix), 
            y = (value), #group = methpts, 
@@ -435,3 +436,13 @@ ggplot(result,
 
 
 View(result)
+
+
+head(result)
+
+result[result$scenario == 'scenarioAP', ]
+ag[which(ag$scenario == 'scenarioAP'), grep('cmd|out', colnames(ag), invert = TRUE, value = TRUE), ]
+
+
+list.files(path = '/home/shiny/debug/', pattern = 'crk.+AP')
+file.show('/home/shiny/debug/log2UNIC_crk_scenarioAP.txt')
