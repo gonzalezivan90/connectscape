@@ -1,4 +1,9 @@
 ### step by step version
+## workign version meant to scale by steps
+
+# system('cd /home/shiny/connectscape/; git add . ; git commit -m "some edits"; git push')
+
+
 {
   library(bit) #
   library(digest)
