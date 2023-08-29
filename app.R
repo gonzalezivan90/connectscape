@@ -1,4 +1,11 @@
-system('cd /home/shiny/connectscape/; git add . ; git commit -m "some edits"; git push')
+#system('cd /home/shiny/connectscape/; git add . ; git commit -m "some edits"; git push')
+#### Full code --------- 
+# https://stackoverflow.com/questions/58809784/adjusting-width-of-tabpanel-titles-with-r-shiny
+# https://stackoverflow.com/questions/32152827/r-shiny-center-and-resize-textinput
+# https://stackoverflow.com/questions/58809784/adjusting-width-of-tabpanel-titles-with-r-shiny
+
+
+
 {
   library(bit) #
   library(digest)

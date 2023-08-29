@@ -11,15 +11,15 @@ library(raster)
 
 { ### FIX origfiles
   # ## CHANGE -dstnodata "-9999"
-  setwd(dataPath)
-  (tifs <- list.files(pattern = '*5.tif'))
-  sapply(tifs, function(x) {file.rename(x, gsub('^size', 'orig_size', x))})
-  (tifs <- list.files(pattern = 'orig.+\\.tif'))
-  for(j in 1:length(tifs)){ # j = 1
-    system(
-      paste0('gdalwarp ', tifs[j], " ", gsub('orig_', '', tifs[j]),' -dstnodata "-9999"')
-    )
-  }
+  # setwd(dataPath)
+  # (tifs <- list.files(pattern = '*5.tif'))
+  # sapply(tifs, function(x) {file.rename(x, gsub('^size', 'orig_size', x))})
+  # (tifs <- list.files(pattern = 'orig.+\\.tif'))
+  # for(j in 1:length(tifs)){ # j = 1
+  #   system(
+  #     paste0('gdalwarp ', tifs[j], " ", gsub('orig_', '', tifs[j]),' -dstnodata "-9999"')
+  #   )
+  # }
   # 
   # ## File copy
   # setwd(unicorPath)
@@ -135,6 +135,8 @@ params <- list(lcc4 = 100000,
   # {EXT}: raster(.levels)  .kdepaths .addedpaths.txt  (csv) paths.csv .cdmatrix.csv
   
   ag$lcc_cola_out <- paste0('out_lcc_', ag$scenario, '.tif')
+  ag$lcc_cola_out2 <- paste0('cola_lcc_', ag$scenario, '.tif')
+  ag$lcc_unic_out2 <- gsub('out', 'unic', ag$lcc_cola_out)
   
   ag$lcc_unic_cmd <- paste0('taskset --cpu-list 6 /usr/bin/time -v ', # cd /home/shiny/UNICOR/unicor/ && 
                             '/home/shiny/anaconda3/envs/cdujlab/bin/python UNICOR.py ',
@@ -166,6 +168,9 @@ params <- list(lcc4 = 100000,
   # {EXT}: raster(.levels)  .kdepaths .addedpaths.txt  (csv) paths.csv .cdmatrix.csv
   
   ag$crk_cola_out <- paste0('out_crk_', ag$scenario, '.tif')
+  ag$crk_cola_out2 <- paste0('cola_crk_', ag$scenario, '.tif')
+  ag$crk_unic_out2 <- gsub('out', 'unic', ag$crk_cola_out)
+  
   
   ag$crk_unic_cmd <- paste0('taskset --cpu-list 6 /usr/bin/time -v ', # cd /home/shiny/UNICOR/unicor/ && 
                             '/home/shiny/anaconda3/envs/cdujlab/bin/python UNICOR.py ',
@@ -198,6 +203,10 @@ params <- list(lcc4 = 100000,
   # {EXT}: raster(.levels)  .kdepaths .addedpaths.txt  (csv) paths.csv .cdmatrix.csv
   
   ag$mat_cola_out <- paste0('out_mat_', ag$scenario, '.csv')
+  ag$mat_cola_out2 <- paste0('cola_mat_', ag$scenario, '.csv')
+  ag$mat_unic_out2 <- gsub('out', 'unic', ag$mat_cola_out)
+  
+  
   
   ag$mat_unic_cmd <- paste0('taskset --cpu-list 6 /usr/bin/time -v ', #cd /home/shiny/UNICOR/unicor/ && 
                             '/home/shiny/anaconda3/envs/cdujlab/bin/python UNICOR.py ',
@@ -214,8 +223,8 @@ params <- list(lcc4 = 100000,
   
 }
 
-write.csv(ag, paste0(gitPath, 'scenarios_cola-unicor_', nrow(ag), '.csv'))
-write.csv(ag, paste0(dataPath, 'scenarios_cola-unicor_', nrow(ag), '.csv'))
+# write.csv(ag, paste0(gitPath, 'scenarios_cola-unicor_', nrow(ag), '.csv'))
+# write.csv(ag, paste0(dataPath, 'scenarios_cola-unicor_', nrow(ag), '.csv'))
 # View(ag)
 
 # sapply(
@@ -322,7 +331,8 @@ setwd(unicorPath) # '/home/shiny/UNICOR/unicor/'
 for ( i in (1:nrow(ag))){ # i = 20; i = 22; i = which(ag$scenario == 'scenarioS')
   
   (case <- ag[i, ])
-
+  
+  
   ###
   # setwd('/home/ubuntu/data/')
   setwd(unicorPath) # '/home/shiny/UNICOR/unicor/'
@@ -333,7 +343,6 @@ for ( i in (1:nrow(ag))){ # i = 20; i = 22; i = which(ag$scenario == 'scenarioS'
     r <- raster(paste0(dataPath, case$tif))
     shp <- shapefile(paste0(dataPath, case$shp))
     plot(r); plot(shp, add = TRUE)
-    
   }
   
   
@@ -449,9 +458,4 @@ unique(gsub('out_.+_sce', 'sce', gsub('lcc|crk|mat|.addedpaths|.kdepaths|.cdmatr
 head(ag[, grep('out', colnames(ag))])
 
 # # # - # system('setsid R -e "source(\'/home/shiny/performance_cola.R\')" >/dev/null 2>&1 < /dev/null &')
-
-
-
-
-
 
