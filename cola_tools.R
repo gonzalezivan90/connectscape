@@ -208,8 +208,8 @@ ripTemplate <- data.frame(RIP, row.names = gsub(' .+|\t.+', '', RIP) )
 
 fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
   # setwd('N:/Mi unidad/git/connecting-landscapes/performance-tests/inputs')
-  # inrasterpath = 'orig_tifs/size5.tif'
-  # outrasterpath = 'size5.tif'
+  # inrasterpath = 'orig_tifs/size6.tif'
+  # outrasterpath = 'size6.tif'
   
   inraster <- inrasterpath
   outraster <- outrasterpath
@@ -230,7 +230,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
   }
   
   if (require('gdalUtils')){
-    print(1)
+    # print(1)
     
     gi <- gdalUtils::gdalinfo(inraster)
     
@@ -241,7 +241,6 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
     options(digits = max(nchar(pixsize0)))
     (pixsize <- abs(as.numeric(pixsize0 )))
     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-    options(digits=5)
     
     if( !( nd & ps ) ) {
       gdalUtils::gdalwarp(srcfile = inraster, dstfile = outraster, 
@@ -250,7 +249,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
     }
 
   } else if(require('gdalUtilities')){
-    print(2)
+    # print(2)
     
     # options(scipen = 999)
     # options(scipen = 9)
@@ -264,8 +263,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
     options(digits = max(nchar(pixsize0)))
     (pixsize <- abs(as.numeric(pixsize0 )))
     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-    options(digits=5)
-    
+
     if( !( nd & ps ) ) {
       gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster, 
                               tr = rep(max(pixsize), 2), dstnodata = -9999)
@@ -273,7 +271,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
     }
 
   } else if(require('raster')){
-    print(3)
+    # print(3)
     
     options(digits = 20)
     rx <- raster(inraster)
@@ -281,13 +279,13 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
     
     (pixsize <- res(rx))
     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-    options(digits = 3)
     if( !( nd & ps ) ) {
       templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
       raster::resample(x = rx, y = templ, filename = outraster, NAflag = -9999, overwrite = FALSE)
       outraster0 <- outraster
     }
   }
+  options(digits = 5)
   return(outraster0)
 }
 
