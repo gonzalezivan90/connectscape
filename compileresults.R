@@ -20,23 +20,23 @@ ag <- read.csv( paste0(gitPath, 'scenarios_cola-unicor_42.csv') )
 
 colnames(ag)
 rtemp <- raster(paste0(dataPath, 'size1.tif'))
-log_2 <- TRUE
+log_2 <- FALSE
 for(i in 1:nrow(ag)){ # i = 6 }
   
   # i = which(ag$scen == 'K')
   case <- ag[i, ]
   
-  (filesCola <- list.files(path = dataPath, pattern = case$scenario, full.names = TRUE))
-  (filesUnic <- list.files(path = unicorPath, full.names = TRUE,
-                          pattern = gsub('.rsg|.xy', '', paste0(case$rsg,'.+_', case$xy,'\\.'))
-                          ))
+  # (filesCola <- list.files(path = dataPath, pattern = case$scenario, full.names = TRUE))
+  # (filesUnic <- list.files(path = unicorPath, full.names = TRUE,
+  #                         pattern = gsub('.rsg|.xy', '', paste0(case$rsg,'.+_', case$xy,'\\.'))
+  #                         ))
   
   
   ## Convert and list files
   
   inUnic <- paste0 (unicorPath, case$lcc_unic_out, '.kdepaths')
   outUnic <- paste0 (dataPath, case$lcc_unic_out2)
-  if (file.exists( inUnic ) & !file.exists( outUnic )){
+  if (file.exists( inUnic ) & ! file.exists( outUnic )){
     rx <- raster(inUnic)
     rx@crs <- rtemp@crs 
     writeRaster(rx, filename = outUnic )

@@ -1,4 +1,4 @@
-dataPath <- '/home/shiny/data/'; dir.create(dataPath)
+dataPath <- '/home/shiny/debug/'; dir.create(dataPath)
 setwd(dataPath); list.files(path = dataPath)
 unicorPath <- '/home/shiny/UNICOR/unicor/'; list.files(path = unicorPath)
 gitPath <- '/home/shiny/connecting-landscapes/performance-tests/inputs/'; list.files(path = gitPath)
@@ -243,6 +243,9 @@ ag[, 1:6]
 for ( i in (1:nrow(ag))){ # i = 20; i = 22; i = which(ag$scenario == 'scenarioS')
   
   (case <- ag[i, ])
+  
+  print(case$scenario)
+  
   cat(paste0(' \n\n\n\n\n\n\n ',
              '--------------------------------------------------------',
              i, case$scenario, ' \n\n\n\n\n\n\n ',
@@ -327,17 +330,15 @@ for ( i in (1:nrow(ag))){ # i = 20; i = 22; i = which(ag$scenario == 'scenarioS'
 }
 
 
+# setwd('/home/ubuntu/data/')
 setwd(unicorPath) # '/home/shiny/UNICOR/unicor/'
+system('pwd')
 for ( i in (1:nrow(ag))){ # i = 20; i = 22; i = which(ag$scenario == 'scenarioS')
-  
+  # i = 1
   (case <- ag[i, ])
-  
+  case$scenario
   
   ###
-  # setwd('/home/ubuntu/data/')
-  setwd(unicorPath) # '/home/shiny/UNICOR/unicor/'
-  system('pwd')
-  case$scenario
   
   if (FALSE) { ## Check parameters
     r <- raster(paste0(dataPath, case$tif))
@@ -459,3 +460,26 @@ head(ag[, grep('out', colnames(ag))])
 
 # # # - # system('setsid R -e "source(\'/home/shiny/performance_cola.R\')" >/dev/null 2>&1 < /dev/null &')
 
+
+
+bash <- c(ag$lcc_cola_cmd, ag$crk_cola_cmd, ag$mat_cola_cmd,
+          ag$lcc_unic_cmd, ag$crk_unic_cmd, ag$mat_unic_cmd)
+
+length(bash)
+#repcmd2 <- sample(repcmd2)
+#repcmd2 <- gsub('data/log', 'data/log2', repcmd2)
+head(repcmd2)
+
+bash <- c('### chmod +x /home/shiny/connectscape/bash_iteration2b.sh    ## Run: /home/shiny/connectscape/bash_iteration2b.sh &', 
+             ' ## /home/shiny/connectscape/bash_iteration2b.sh & ', #  > outputfile_for_stdout
+             'cd /home/shiny/UNICOR/unicor/',
+             '',
+             (bash))
+bash <- gsub('home/shiny', 'home/ubuntu', bash)
+
+
+# writeLines(bash, '/home/shiny/connectscape/bash_orig_ubuntu.sh')
+
+# system('chmod +x /home/shiny/connectscape/bash_iteration2b.sh')
+# system('/home/shiny/connectscape/bash_iteration2b.sh &')
+# 
