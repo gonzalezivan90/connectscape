@@ -1,7 +1,7 @@
 ### step by step version
 ## workign version meant to scale by steps
-# system('cd /home/shiny/connectscape/app; git add . ; git commit -m "some edits"; git push')
-# ghp_
+# system('cd /home/shiny/connectscape/; git add . ; git commit -m "some edits"; git push')
+# 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
 # git pull connectscape
 
 {
@@ -58,8 +58,7 @@
   logPath <<- '/data/tempR/logFoldersR.txt' 
   
   
-  #per <- read.csv('/srv/shiny-server/cola/results_42scenarios.csv')
-  #per <- read.csv('/home/shiny/connectscape/app/results_42scenarios.csv')
+  # per <- read.csv('/srv/shiny-server/cola/results_42scenarios.csv')
   # per$X <- NULL
   # per <- per[, c('soft', 'scen','size','spix','npix',
   #                'npts','func', 'variable','var', 'value')]
@@ -67,18 +66,17 @@
   # uper <- rbind(uper[nchar(uper$scen) == 1, ],
   #              uper[nchar(uper$scen) == 2, ], deparse.level = 2)
   # rownames(uper) <- NULL
-
+  
   # str(per)
   # crs_file <- '/srv/shiny-server/cola/crs_codes_global.csv'
   # crs_df <- read.csv(crs_file)
   # crs_df$X <- NULL
-  # crs_df$label <- paste(crs_df$crs_code, ' -- ',
-  #                       crs_df$name, ' -- ',
+  # crs_df$label <- paste(crs_df$crs_code, ' -- ', 
+  #                       crs_df$name, ' -- ', 
   #                       crs_df$table_name)
   # head(crs_df)
-
+  
   # save(per, uper, crs_df, file = '/srv/shiny-server/cola/per_uper_crs_df.RData')
-  #save(per, uper, crs_df, file = '/home/shiny/connectscape/app/per_uper_crs_df.RData')
   load('/srv/shiny-server/cola/per_uper_crs_df.RData')
   
   
@@ -364,7 +362,7 @@ loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
 }
 
 
-pdebug <- function(devug, pre = '\n --\n', sep = '\n-',  ...){
+pdebug <- function(devug, sep = '\n', pre = '\n --\n', ...){
   if (devug){
     x. = c(...)
     # x. = c('is.null(rv$newtifPath_dist)', 'rv$newtifPath_dist')
@@ -375,7 +373,7 @@ pdebug <- function(devug, pre = '\n --\n', sep = '\n-',  ...){
       # x = x.[2]
       y <- tryCatch(expr = eval(parse(text = x)), error = function(e) '-err-')
       if(is.null(y)){ y <- 'NULL' } 
-      tryCatch(cat(sep, x, ": ", y), error = function(e) e)
+      tryCatch(cat(x, ": ", y, sep), error = function(e) e)
     }))
   }
 } # pdebug("is.null(py)", 'inSurSessID', sep = '\n', pre = ' -- ')
@@ -456,15 +454,8 @@ ui <- dashboardPage(
                   
                   menuItem("Create source points", tabName = "tab_points", icon = icon("map-pin")),
                   conditionalPanel( 'input.sidebarid == "tab_points"',
-                                    shiny::fileInput('in_points_hs', 'Load Hab. sui.', 
-                                                     buttonLabel = 'Search TIF', placeholder = 'No file',
-                                                     accept=c('.tif'),
-                                                     #accept= '.zip',
-                                                     multiple=FALSE),
-                  ),
-                  conditionalPanel( 'input.sidebarid == "tab_points"',
-                                    shiny::fileInput('in_points_tif', 'Load Res. sur.', 
-                                                     buttonLabel = 'Search TIF', placeholder = 'No file',
+                                    shiny::fileInput('in_points_tif', 'Load TIF', 
+                                                     buttonLabel = 'Search', placeholder = 'No file',
                                                      accept=c('.tif'),
                                                      #accept= '.zip',
                                                      multiple=FALSE),
@@ -472,8 +463,8 @@ ui <- dashboardPage(
                   
                   menuItem("Cost distance matrix", tabName = "tab_distance", icon = icon("border-all")),
                   conditionalPanel( 'input.sidebarid == "tab_distance"',
-                                    shiny::fileInput('in_dist_tif', 'Load Res. sur.', 
-                                                     buttonLabel = 'Search TIF', placeholder = 'No file',
+                                    shiny::fileInput('in_dist_tif', 'Load TIF', 
+                                                     buttonLabel = 'Search', placeholder = 'No file',
                                                      accept=c('.tif'), multiple=FALSE),
                                     shiny::fileInput('in_dist_shp', 'Load points', buttonLabel = 'Search', 
                                                      placeholder = 'No file(s) ',
@@ -490,8 +481,8 @@ ui <- dashboardPage(
                   
                   menuItem("Connectivity - corridors", tabName = "tab_corridors", icon = icon("route")),
                   conditionalPanel( 'input.sidebarid == "tab_corridors"',
-                                    shiny::fileInput('in_lcc_tif', 'Load Res. sur.', 
-                                                     buttonLabel = 'Search TIF', placeholder = 'No file',
+                                    shiny::fileInput('in_lcc_tif', 'Load TIF', 
+                                                     buttonLabel = 'Search', placeholder = 'No file',
                                                      accept=c('.tif'), multiple=FALSE),
                                     shiny::fileInput('in_lcc_shp', 'Load points', buttonLabel = 'Search', 
                                                      placeholder = 'No file(s) ',
@@ -503,8 +494,8 @@ ui <- dashboardPage(
                   menuItem(HTML(paste("Connectivity", "dispersal kernels", sep="<br/>")),
                            tabName = "tab_kernels", icon = icon("bezier-curve")),
                   conditionalPanel( 'input.sidebarid == "tab_kernels"',
-                                    shiny::fileInput('in_crk_tif', 'Load Res. sur.', 
-                                                     buttonLabel = 'Search TIF', placeholder = 'No file',
+                                    shiny::fileInput('in_crk_tif', 'Load TIF', 
+                                                     buttonLabel = 'Search', placeholder = 'No file',
                                                      accept=c('.tif'), multiple=FALSE),
                                     shiny::fileInput('in_crk_shp', 'Load points', buttonLabel = 'Search', 
                                                      placeholder = 'No file(s) ',
@@ -728,18 +719,18 @@ ui <- dashboardPage(
         
         
         
-        ####### UI Tab points ----
+        ##### UI Tab points ----
         
         tabItem('tab_points',
                 h1(' Create points'),
                 verbatimTextOutput("vout_points"), # %>% withSpinner(color="#0dc5c1"),
                 fluidPage(
-                  column(2, textInput("in_points_3", "Min-grid:", '2')),
-                  column(2, textInput("in_points_4", "Max-grid:", '95')),
-                  column(2, textInput("in_points_5", "# of points:", '50')),
-                  column(3, selectInput("in_points_ly", "Source layer:", '50', choices = '')),
-                  column(3, actionButton("points_py", "Create points")),
-                  column(2, downloadButton('ptsDwn', 'Download'))
+                  column(3, textInput("in_points_3", "Min-grid:", '2')),
+                  column(3, textInput("in_points_4", "Max-grid:", '95')),
+                  column(3, textInput("in_points_5", "# of points:", '50')),
+                  column(3, actionButton("points_py", "Create points"),
+                         downloadButton('ptsDwn', 'Download')
+                  )
                 ),
                 leafletOutput("ll_map_points", height = "600px") %>% withSpinner(color="#0dc5c1")
         ),
@@ -747,7 +738,7 @@ ui <- dashboardPage(
         ##> vout_points; ll_map_points; points_py; in_points_3 -- 5
         
         
-        #### UI Tab distance ----
+        ##### UI Tab distance ----
         
         tabItem('tab_distance',
                 h1(' Create Distance'),
@@ -1080,21 +1071,14 @@ server <- function(input, output, session) {
     }
   }
   
-  #  >> makeLL ---------------------------------------------------------------------------
   makeLL <- function(){
     # https://rstudio.github.io/leaflet/morefeatures.html
     ll0 <- leaflet()
     grps <- c()
     {
       
-      pdebug(devug = devug, sep = '\n-', pre = '\n Make LL\n', 
-             'rv$hs', 'file.exists(rv$hs)', 'rv$hsready',
-             'rv$tif', 'file.exists(rv$tif)', 'rv$tifready'
-             )
-      
-      
+      pdebug(devug = TRUE, '\n', '\n', '!is.null(rv$hs)', '(rv$hs)', '!is.null(rv$hs_sp)', 'rv$hsready')
       if((rv$hsready)){
-        pdebug(devug=devug,pre='\n MakeLL - HS\n',sep='\n-','rv$hs_pal','rv$hs_rng')
         
         grps <- c(grps, "Habitat suitability")
         
@@ -1104,7 +1088,8 @@ server <- function(input, output, session) {
           rv$hs2s_sp <- raster(rv$hs2s)
         }
    
-        pdebug(devug = devug, sep = '\n-', pre = '-', '(rv$hs)', 'rv$hs2s')
+        pdebug(devug = devug, sep = '\n-', pre = '\n', 
+               '(rv$hs)', 'rv$hs2s')
 
         ll0 <- ll0 %>% addRasterImage(rv$hs2s_sp, colors = rv$hs_pal, opacity = .7, 
                                       group = "Habitat suitability", layerId = "Habitatsuitability") %>%
@@ -1113,27 +1098,18 @@ server <- function(input, output, session) {
                     position = 'bottomleft', title = "Suitability"#, opacity = .3
                     #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
           )
-        
-        #inPoints <<- input$in_points_ly
-        #pdebug(devug = devug, pre = '\n', sep = '\n-',  '(rv$hs)', 'rv$hs2s', 'rv$point_choices', "input$in_points_ly", 'inPoints')
-        rv$point_choices <- unique(c(rv$point_choices, 'Habitatsuitability'))
-        updateSelectizeInput(session, "in_points_ly", 
-                             choices = rv$point_choices,
-                             server = TRUE)
-        #pdebug(devug = devug, pre = '\n', sep = '\n-', '(rv$hs)', 'rv$hs2s', 'rv$point_choices', "input$in_points_ly", 'inPoints2')
       } 
-      
       
       if(rv$tifready){
         grps <- c(grps, "Surface resistance")
-        pdebug(devug=devug,pre='\n MakeLL - TIF',sep='\n','rv$tif_pal','rv$tif_rng')
+        #pdebug(devug = TRUE, sep = '\n', pre = '\n', 'rv$tif_pal', 'rv$tif_rng')
+        #print('B')
         
         if (rv$tif0 != rv$tif){
           rv$tif2s <- resampIfNeeded(rv$tif)
           rv$tif0 <- rv$tif
           rv$tif2s_sp <- raster(rv$tif2s)
         }
-        pdebug(devug=devug,pre='\n MakeLL - TIF',sep='\n','rv$tif0')
         
         ll0 <- ll0 %>% 
           addRasterImage(rv$tif2s_sp, colors = rv$tif_pal, 
@@ -1147,13 +1123,6 @@ server <- function(input, output, session) {
                     position = 'bottomleft', title = "Resistance"#, opacity = .3
                     #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
           )
-        
-        #pdebug(devug = devug, pre = '\n', sep = '\n-', 'rv$tif', 'rv$point_choices', "input$in_points_ly")
-        rv$point_choices <- unique(c(rv$point_choices, 'SurfaceResistance'))
-        updateSelectizeInput(session, "in_points_ly", 
-                             choices = rv$point_choices,
-                             server = TRUE)
-        #pdebug(devug = devug, pre = '\n', sep = '\n-', 'rv$tif', 'rv$point_choices', "input$in_points_ly")
       }
       
       if((rv$lccready)){
@@ -1194,7 +1163,7 @@ server <- function(input, output, session) {
       
       if((rv$ptsready)){
         grps <- c(grps, 'Points')
-        ll0 <- ll0 %>%  addCircleMarkers(data = rv$pts_sp, label = ~ID, group = 'Points',  radius = 5)
+        ll0 <- ll0 %>%  addCircleMarkers(data = rv$pts_sp, label = ~ID, group = 'Points')
       } 
     }
     
@@ -1224,7 +1193,7 @@ server <- function(input, output, session) {
       
       (grpTIF <<- rev(grps[grps != 'Points'])) # Layers to hide
       if(length(grpTIF) > 1){
-        (hideGr <<- grpTIF[2:(length(grpTIF))])
+        (hideGr <- grpTIF[2:(length(grpTIF))])
         ll0 <- ll0 %>% hideGroup(hideGr)
       }
       pdebug(devug = TRUE, sep = '\n', pre = '\n', 'grps', 'grpTIF', 'hideGr')
@@ -1311,7 +1280,6 @@ server <- function(input, output, session) {
     surfmap = NULL, pointsmap = NULL, 
     distmap = NULL, distrast = NULL, distshp = NULL,
     
-    point_choices = NULL, 
     
     ## Check readyness ...
     hsready = FALSE,
@@ -2327,8 +2295,8 @@ server <- function(input, output, session) {
   
   ####### > POINTS  ------------------
   observeEvent(input$in_points_tif, {
-    # invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathpts, rv$tifpathptsfix)), 
-    #                                     error = function(e) NULL)))
+    invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathpts, rv$tifpathptsfix)), 
+                                        error = function(e) NULL)))
     
     if(is.null(rv$inSurSessID)){
       pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
@@ -2342,7 +2310,7 @@ server <- function(input, output, session) {
       rv$inPointsSessID <- inPointsSessID
     }
     
-    rv$tifpathpts <- paste0(tempFolder, '/in_points_', rv$inPointsSessID, '.tif')
+    rv$tifpathpts <- paste0(tempFolder, '/in_points_', inPointsSessID, '.tif')
     file.copy(input$in_points_tif$datapath, rv$tifpathpts); 
     #try(file.remove(input$in_points_tif$datapath))
     
@@ -2351,7 +2319,7 @@ server <- function(input, output, session) {
     
     rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
     
-    rv$tifpathptsfix <- paste0(tempFolder, '/in_points_fixed_', rv$inPointsSessID, '.tif')
+    rv$tifpathptsfix <- paste0(tempFolder, '/in_surface_fixed_', rv$inSurSessID, '.tif')
     newtifPath_pts <- fitRaster2cola(inrasterpath = rv$tifpathpts, outrasterpath =  rv$tifpathptsfix)
     newtifPath_pts <- ifelse(is.na(newtifPath_pts), yes = rv$tifpathpts, no = newtifPath_pts)
     rv$newtifpathpts <- newtifPath_pts
@@ -2394,52 +2362,6 @@ server <- function(input, output, session) {
     }
   })
   
-  observeEvent(input$in_points_hs, {
-    # invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathpts, rv$tifpathptsfix)), 
-    #                                     error = function(e) NULL)))
-    
-    if(is.null(rv$inSurSessID)){
-      pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
-      (inSurSessID <- sessionIDgen())
-      rv$inSurSessID <- inSurSessID
-      pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
-    }
-    
-    if(is.null(rv$inPointsSessID)){
-      (inPointsSessID <- sessionIDgen())
-      rv$inPointsSessID <- inPointsSessID
-    }
-    
-    rv$tifpathpts <- paste0(tempFolder, '/in_pointshs_', rv$inPointsSessID, '.tif')
-    file.copy(input$in_points_hs$datapath, rv$tifpathpts); 
-    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
-    
-    rv$tifpathptsfix <- paste0(tempFolder, '/in_pointshs_fixed_', rv$inPointsSessID, '.tif')
-    newtifPath_pts <- fitRaster2cola(inrasterpath = rv$tifpathpts, outrasterpath =  rv$tifpathptsfix)
-    newtifPath_pts <<- ifelse(is.na(newtifPath_pts), yes = rv$tifpathpts, no = newtifPath_pts)
-    
-    pdebug(devug=devug,sep='\n',pre='---PTS\n',"newtifPath_pts") # = = = = = = =  = = =  = = =  = = =  = = = 
-    
-
-    if (file.exists(newtifPath_pts)){
-      rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
-      rv$hsready <- TRUE
-      rv$hs <- newtifPath_pts
-      
-      
-      
-      
-      output$ll_map_points <- renderLeaflet({
-        
-        rv$hs_sp <- newtif_pts <- raster(rv$hs)
-        rv$hs_rng <- rng_newtif_pts <- cellStats(newtif_pts, stat = range)
-        rv$hs_pal <- ptsPal <<-  colorNumeric(palette = "magma", reverse = TRUE,
-                                               domain = rng_newtif_pts, na.color = "transparent")
-        makeLL( )
-      })
-    }
-  })
-  
   
   observeEvent(input$points_py, {
     if(!rv$tifready){
@@ -2460,14 +2382,6 @@ server <- function(input, output, session) {
       }
       
       out_pts <- paste0(tempFolder, '/out_simpts_', rv$inSurSessID, '.shp')
-      
-      inPts <- switch (rv$in_points_ly,
-                       SurfaceResistance = rv$hs,
-                       HabitatSuitability = rv$tif)
-      
-      pdebug(devug=devug,sep='\n',pre='---PTS\n',"inPts") # = = = = = = =  = = =  = = =  = = =  = = = 
-      
-      
       
       points_file <- points_shp(py = py, rv$tif, out_pts, 
                                 as.numeric(input$in_points_3),
@@ -2499,6 +2413,21 @@ server <- function(input, output, session) {
           
           makeLL( )
           
+          # llmap <<- rv$llmap %>% clearBounds() %>% clearGroup('Points') %>%
+          #   ## Bug -- using removeMarker() not working, only one point. not use layerId in addMarkers
+          #   addMarkers(data = points_shp, 
+          #              label = ~ID, group = 'Points') %>% 
+          #   addLayersControl(
+          #     baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+          #     overlayGroups = c('Points', "Habitat suitability", "Surface resistance"),
+          #     options = layersControlOptions(collapsed = FALSE)
+          #   )  
+          # 
+          # rv$llmap <<- llmap
+          # updateLL(llmap)
+          # # leafsurface
+          # #llmap
+          # rv$llmap
         })
       }
     }
@@ -2511,7 +2440,9 @@ server <- function(input, output, session) {
   # distmap = NULL, distrast = NULL, distshp = NULL,
   
   observeEvent(input$in_dist_tif, {
-    #invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathdist, rv$newtifPath_dist)), error = function(e) NULL)))
+    invisible(suppressWarnings(
+      tryCatch(file.remove(c(rv$tifpathdist, rv$newtifPath_dist)), 
+               error = function(e) NULL)))
     
     if(is.null(rv$inSurSessID)){
       pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
@@ -2583,7 +2514,8 @@ server <- function(input, output, session) {
     
     pdebug(devug=devug,sep='\n',pre='--','names(input)', 'str(input$in_dist_shp)') # _____________
     
-    # invisible(suppressWarnings(tryCatch(file.remove(c(in_distance_shp, newin_distance_shp)), error = function(e) NULL)))
+    invisible(suppressWarnings(tryCatch(file.remove(c(in_distance_shp, newin_distance_shp)), 
+                                        error = function(e) NULL)))
     
     rv$log <- paste0(rv$log, '\nLoading shapefile');updateVTEXT(rv$log) # _______
     
@@ -2705,7 +2637,8 @@ server <- function(input, output, session) {
            sep='\n',pre='\n---- LCC - TIF\n',
            'rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________ 
     
-    # invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathdist, rv$newtifPath_dist)), error = function(e) NULL)))
+    invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathdist, rv$newtifPath_dist)), 
+                                        error = function(e) NULL)))
     
     if(is.null(rv$inLccSessID)){
       (inLccSessID <- sessionIDgen())
@@ -2769,7 +2702,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$in_lcc_shp, {
     
-    # invisible(suppressWarnings(tryCatch(file.remove(c(in_lcc_shp, newin_lcc_shp)), error = function(e) NULL)))
+    invisible(suppressWarnings(tryCatch(file.remove(c(in_lcc_shp, newin_lcc_shp)), error = function(e) NULL)))
     pdebug(devug=devug,sep='\n',pre='\n---- LCC - SHP\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________ 
     
     rv$log <- paste0(rv$log, '\nLoading shapefile');updateVTEXT(rv$log) # _______
@@ -2898,7 +2831,9 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$in_crk_tif, {
-    #invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathcrk, rv$newtifPath_crk)), error = function(e) NULL)))
+    invisible(suppressWarnings(
+      tryCatch(file.remove(c(rv$tifpathcrk, rv$newtifPath_crk)), 
+               error = function(e) NULL)))
     
     pdebug(devug=devug,sep='\n',pre='---\nloadTIFCRK\n','rv$inSurSessID', 'rv$incrkSessID')
     if(is.null(rv$inSurSessID)){
@@ -2950,7 +2885,8 @@ server <- function(input, output, session) {
     
     #pdebug(devug=devug,sep='\n',pre='--','names(input)', 'str(input$in_crk_shp)') # _____________
     
-    invisible(suppressWarnings(tryCatch(file.remove(c(in_crk_shp, newin_crk_shp)), error = function(e) NULL)))
+    invisible(suppressWarnings(tryCatch(file.remove(c(in_crk_shp, newin_crk_shp)), 
+                                        error = function(e) NULL)))
     
     rv$log <- paste0(rv$log, '\nLoading shapefile');updateVTEXT(rv$log) # _______
     
@@ -3197,11 +3133,6 @@ server <- function(input, output, session) {
 if (FALSE){
   if (TRUE){
     
-    #leafletOutput("mymap", width = "100%", height = "100%") 
-    # proxy <- leafletProxy("mymap")
-    # proxy %>% addCircleMarkers(lng = cmlng, lat = cmlat, group = "draw")
-    
-    
     # tempFolder <- '/data/temp/WH2023090803011605filecd6476238cc/'
     # setwd(tempFolder)
     # list.files()
@@ -3245,30 +3176,25 @@ if (FALSE){
     # rv$llmap0 <- rv$llmap <- llmap
   }
 }
-
 shinyApp(ui, server)
 
-# https://rdrr.io/github/jcrodriguez1989/shinyParallel/f/README.md
-#shinyParallel::runApp( ports = c('3838', '3839'), max.sessions = 1, appDir = shinyApp(ui, server))
 
+## DEBUG
 
 
 
 ###### LINUX SERVER COPY -------------
 # http://18.190.126.82:3838/cola/
 # sudo cp /home/shiny/connectscape/app/app.R /srv/shiny-server/cola/app.R
-# sudo cp /home/shiny/connectscape/app /srv/shiny-server/cola -R
+# sudo cp /home/shiny/connectscape/ /srv/shiny-server/cola -R
+# system('cp /home/shiny/connectscape/app.R /srv/shiny-server/cola/app.R')
 # sudo cp /home/shiny/connectscape/app.R /srv/shiny-server/cola2/app.R -R
 
 
-# cp /home/shiny/connectscape/app/app.R /home/shiny/cola/connecting-landscapes/app.R; sudo rm /srv/shiny-server/connecting-landscapes -R
-# shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 20, users.per.session = 5)
-# http://18.190.126.82:3838/connecting-landscapes
-# http://18.190.126.82:3838/connecting-landscapes/?admin
-
-# R -e "shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)"
-# ##sudo su - -c "R -e \"shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)\"" #
-
-
-# sudo cat /var/log/shiny-server/cola
 # sudo rm /home/shiny/tmpR/leafSim.RDatasudo cp /home/vmuser/gedivis /srv/shiny-server/gedivis -R
+# sudo rm /srv/shiny-server/cola/ -R
+# ##sudo su - -c "R -e \"shinyParallel::installShinyParallel('/home/shiny/connectscape/app/cola/', max.sessions = 25)\"" #
+# R -e "shinyParallel::installShinyParallel('/home/shiny/connectscape/app/cola', max.sessions = 25)" 
+# sudo rm /srv/shiny-server/gedivis2 -R
+# sudo cp /home/vmuser/gedivis /srv/shiny-server/gedivis2 -R
+# sudo cat /var/log/shiny-server/gedivis_
