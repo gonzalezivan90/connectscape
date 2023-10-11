@@ -2,6 +2,7 @@
 ## workign version meant to scale by steps
 # system('cd /home/shiny/connectscape/app; git add . ; git commit -m "some edits"; git push')
 # ghp_
+# 6ZjsBdNHWJvsfp3UP5JTt2hrlZjabI4M75hJ
 # git pull connectscape
 
 {
@@ -40,6 +41,11 @@
   library(DT)
   library(tibble)
   library(viridis)
+  
+  #https://stackoverflow.com/questions/17107206/change-temporary-directory
+  #write(paste0("TMP = '","/data/tempR" ,"'"), file=file.path(Sys.getenv('R_USER'), '.Renviron'))
+  # write("TMP = /data/tempR", file=file.path('~/.Renviron'))
+  #R -e "write('TMP = "/data/tempR"', file=file.path(Sys.getenv('R_USER'), '.Renviron'))"
 }
 
 {
@@ -55,9 +61,11 @@
   rootPath <- '/data/temp/'; #dir.create(rootPath)
   mdPath <- '/home/shiny/connecting-landscapes/docs'; #dir.create(rootPath)
   devug <<- TRUE
-  #write(paste0("TMP = '","/data/tempR" ,"'"), file=file.path(Sys.getenv('R_USER'), '.Renviron'))
+  
+  
   logPath <<- '/data/tempR/logFoldersR.txt' 
   showcasePath <<- '/home/shiny/connecting-landscapes/showcase/'
+  
   
   
   #per <- read.csv('/srv/shiny-server/cola/results_42scenarios.csv')
@@ -237,6 +245,8 @@ cdmat_py <- function(py, inshp, intif, outcsv, param3, param4 = nCores, param5 =
   return(file = ifelse(file.exists(outcsv), outcsv, NA))
 }
 
+
+
 lcc_py <- function(py, inshp, intif, outtif, param4, param5,
                    param6, param7 = nCores, param8 = 'None'){
   # param3 = 25000
@@ -248,6 +258,28 @@ lcc_py <- function(py, inshp, intif, outtif, param4, param5,
   # [6] corridor tolerance (in cost distance units)
   
   src <- '/home/shiny/connecting-landscapes/src/lcc.py'
+  (cmd_lcc <- paste0(py, ' ', src, ' ', inshp, ' ', intif, ' ', outtif, ' ',
+                     format(param4, scientific=F), ' ', 
+                     format(param5, scientific=F), ' ', 
+                     format(param6, scientific=F), " ",
+                     format(param7, scientific=F), " ", param8))
+  
+  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
+  return(file = ifelse(file.exists(outtif), outtif, NA))
+}
+
+
+lcc_py2 <- function(py, inshp, intif, outtif, param4, param5,
+                   param6, param7 = nCores, param8 = 'None'){
+  # param3 = 25000
+  # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+  # [2] resistance surface
+  # [3] output file name
+  # [4] distance threshold (should be in meters*)
+  # [5] corridor smoothing factor (in number of cells)
+  # [6] corridor tolerance (in cost distance units)
+  
+  src <- '/home/shiny/connecting-landscapes/src/lcc_hdf5_v6.py'
   (cmd_lcc <- paste0(py, ' ', src, ' ', inshp, ' ', intif, ' ', outtif, ' ',
                      format(param4, scientific=F), ' ', 
                      format(param5, scientific=F), ' ', 
