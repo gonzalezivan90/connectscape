@@ -55,7 +55,9 @@
   rootPath <- '/data/temp/'; #dir.create(rootPath)
   mdPath <- '/home/shiny/connecting-landscapes/docs'; #dir.create(rootPath)
   devug <<- TRUE
+  #write(paste0("TMP = '","/data/tempR" ,"'"), file=file.path(Sys.getenv('R_USER'), '.Renviron'))
   logPath <<- '/data/tempR/logFoldersR.txt' 
+  showcasePath <<- '/home/shiny/connecting-landscapes/showcase/'
   
   
   #per <- read.csv('/srv/shiny-server/cola/results_42scenarios.csv')
@@ -106,8 +108,10 @@
   (sessionID <<- sessionIDgen())
   tempFolder <<- paste0(rootPath, sessionID, '/')
   dir.create(tempFolder)
+  
   (cat('\n\n >>>> tempFolder: ', tempFolder, '\n'))
   (cat(' >>>> R-tempdir(): ', tempdir(), '\n\n'))
+  
 }
 
 ## Clean files
@@ -410,6 +414,99 @@ addcolumn <- function(df, nameofthecolumn = NULL){
   cbind(df, df[ , id])
 }
 
+## Showcase -----
+
+sh_object <- paste0(rootPath, 'showcase.RData')
+
+if(file.exists(sh_object)){
+  ss <- load(sh_object)
+} else {
+  
+  sh_hs <- raster::raster(paste0(showcasePath, '/input/HS_res375m.tif'))
+  sh_sr <- raster::raster(paste0(showcasePath, '/input/Resistance_res375m.tif'))
+  sh_pt <- rgdal::readOGR(paste0(showcasePath, '/input/SourcePoints_50.shp'))
+  sh_pt <- spTransform(sh_pt, CRSobj = CRS('EPSG:4326'))
+  sh_pt@data[, c('ln', 'lt')] <- coordinates(sh_pt)
+  sh_crk <- raster::raster(paste0(showcasePath, '/results/CRK_SP50_DT250k_v1.tif'))
+  sh_lcc <- raster::raster(paste0(showcasePath, '/results/LCC_SP50_DT1mln_CSF5CT5.tif'))
+  
+  
+  sh_hs_pal <- colorNumeric(palette = "viridis", reverse = TRUE,
+                            domain = cellStats(sh_hs, stat = range) + 0.1,
+                            na.color = "transparent")
+  sh_sr_pal <- colorNumeric(palette = "magma", reverse = TRUE,
+                            domain = cellStats(sh_sr, stat = range)+ 0.1,
+                            na.color = "transparent")
+  sh_crk_pal <- colorNumeric(palette = "inferno", reverse = TRUE,
+                            domain = cellStats(sh_crk, stat = range)+ 0.1,
+                            na.color = "transparent")
+  sh_lcc_pal <- colorNumeric(palette = "plasma", reverse = TRUE,
+                            domain = cellStats(sh_lcc, stat = range)+ 0.1,
+                            na.color = "transparent")
+  
+  # addCircleMarkers(lng = cmlng, lat = cmlat, group = "draw")
+  
+  ll_sh <- leaflet() %>%  addTiles() %>%
+    addMeasure( position = "topright",
+                primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
+                activeColor = "#3D535D",completedColor = "#7D4479") %>%
+    addMiniMap( tiles = providers$Esri.WorldStreetMap, toggleDisplay = TRUE) %>%
+    
+    addCircleMarkers(lng = sh_pt$ln, lat = sh_pt$lt, group = "Points", radius = 1) %>%
+    
+    addRasterImage(sh_hs, colors = sh_hs_pal, opacity = .7, 
+                   group = "HabitatSuitability", layerId = "HabitatSuitability") %>%
+    addRasterImage(sh_sr, colors = sh_sr_pal, opacity = .7, 
+                   group = "SurfaceResistance", layerId = "SurfaceResistance") %>%
+    addRasterImage(sh_lcc, colors = sh_lcc_pal, opacity = .7, 
+                   group = "Corridors", layerId = "Corridors") %>%
+    addRasterImage(sh_crk, colors = sh_crk_pal, opacity = .7, 
+                   group = "Kernels", layerId = "Kernels") %>%
+    
+    # addCircleMarkers(sh_pt, group = "draw") %>%
+    # ll_sh %>%
+    addLegend(pal =  sh_hs_pal, values = cellStats(sh_hs, stat = range), 
+              group = "HabitatSuitability", layerId = "HabitatSuitability",
+              position = 'bottomleft', title = "Hab. suitability")  %>%
+    
+    addLegend(pal = sh_crk_pal, values = cellStats(sh_crk, stat = range),
+              group = "Kernels", layerId = "Kernels",
+              position = 'bottomleft', title = "Kernels")  %>% 
+    
+    addLegend(pal =  sh_sr_pal, values = cellStats(sh_sr, stat = range),
+              group = "SurfaceResistance", layerId = "SurfaceResistance",
+              position = 'bottomleft', title = "Sur. resistance")  %>%
+    
+    addLegend(pal = sh_lcc_pal, values = cellStats(sh_lcc, stat = range),
+              group = "Corridors", layerId = "Corridors",
+              position = 'bottomleft', title = "Corridors")  %>%
+    
+    
+    addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
+    addLayersControl(baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+                     overlayGroups = c('Points',
+                                       'HabitatSuitability',
+                                       'SurfaceResistance',
+                                       'Kernels',
+                                       'Corridors'
+                     ),
+                     options = layersControlOptions(collapsed = FALSE)) 
+
+  
+  
+  save(ll_sh, file = sh_object)
+  # file.remove(sh_object)
+  # rv$hs_sp <- raster(rv$hs)
+  # #rng_newtif <- c(newtif@data@min, newtif@data@max)
+  # rv$hs_rng <- rng_newtif <- cellStats(rv$hs_sp, stat = range)
+  # 
+  # rv$hs_pal <- hsPal <<-  colorNumeric(palette = "magma", reverse = TRUE,
+  #                                      domain = rng_newtif, na.color = "transparent")
+  
+  
+}
+
+
 
 
 
@@ -630,9 +727,14 @@ ui <- dashboardPage(
                              includeMarkdown(
                                file.path(mdPath, 'md_showcase.md')),
                              fluidRow(
-                               img(src=file.path(mdPath, 'showcase.gif')
-                                   #, align = "left",height='250px',width='500px'
-                               )
+                               # img(src=file.path(mdPath, 'showcase.gif')
+                               #     #, align = "left",height='250px',width='500px'
+                               # )
+                               fluidPage(
+                                 leafletOutput("ll_map_show", height = "600px") %>% 
+                                   withSpinner(color="#0dc5c1")
+                                 )
+                               
                              )
                     )
                   )
@@ -1282,6 +1384,8 @@ server <- function(input, output, session) {
         ll
       })
   }
+  
+  output$ll_map_show <- renderLeaflet({ ll_sh })
   
   updateVTEXT <- function(txt, devug = FALSE){
     if(devug){print(txt)}
@@ -2461,11 +2565,13 @@ server <- function(input, output, session) {
       
       out_pts <- paste0(tempFolder, '/out_simpts_', rv$inSurSessID, '.shp')
       
+      print(rv$in_points_ly)
+      
       inPts <- switch (rv$in_points_ly,
                        SurfaceResistance = rv$hs,
                        HabitatSuitability = rv$tif)
       
-      pdebug(devug=devug,sep='\n',pre='---PTS\n',"inPts") # = = = = = = =  = = =  = = =  = = =  = = = 
+      pdebug(devug=devug,sep='\n',pre='---PTS\n',"inPts") # = = = = = = =  = = =  = = =  = = =  = = = http://18.190.126.82:8787/p/f2dab63b/#shiny-tab-tab_surface
       
       
       
@@ -3258,9 +3364,7 @@ shinyApp(ui, server)
 # http://18.190.126.82:3838/cola/
 # sudo cp /home/shiny/connectscape/app/app.R /srv/shiny-server/cola/app.R
 # sudo cp /home/shiny/connectscape/app /srv/shiny-server/cola -R
-# sudo cp /home/shiny/connectscape/app.R /srv/shiny-server/cola2/app.R -R
-
-
+#
 # cp /home/shiny/connectscape/app/app.R /home/shiny/cola/connecting-landscapes/app.R; sudo rm /srv/shiny-server/connecting-landscapes -R
 # shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 20, users.per.session = 5)
 # http://18.190.126.82:3838/connecting-landscapes
