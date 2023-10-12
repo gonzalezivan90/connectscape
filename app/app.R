@@ -43,9 +43,11 @@
   library(viridis)
   
   #https://stackoverflow.com/questions/17107206/change-temporary-directory
-  #write(paste0("TMP = '","/data/tempR" ,"'"), file=file.path(Sys.getenv('R_USER'), '.Renviron'))
+  # write(paste0("TMP = '","/data/tempR" ,"'"), file=file.path(Sys.getenv('R_USER'), '.Renviron'))
   # write("TMP = /data/tempR", file=file.path('~/.Renviron'))
-  #R -e "write('TMP = "/data/tempR"', file=file.path(Sys.getenv('R_USER'), '.Renviron'))"
+  # YES; R -e "write('TMP = /data/tempR', file=file.path('~/.Renviron'))"
+  # NO R -e "write('TMP = \"/data/tempR\"', file=file.path('~/.Renviron'))"
+  # NO R -e "write('TMP = "/data/tempR"', file=file.path(Sys.getenv('R_USER'), '.Renviron'))"
 }
 
 {
@@ -526,7 +528,7 @@ if(file.exists(sh_object)){
 
   
   
-  save(ll_sh, file = sh_object)
+  #save(ll_sh, file = sh_object)
   # file.remove(sh_object)
   # rv$hs_sp <- raster(rv$hs)
   # #rng_newtif <- c(newtif@data@min, newtif@data@max)
@@ -765,7 +767,26 @@ ui <- dashboardPage(
                                fluidPage(
                                  leafletOutput("ll_map_show", height = "600px") %>% 
                                    withSpinner(color="#0dc5c1")
-                                 )
+                               )
+                               
+                             )
+                    ),
+                    tabPanel("ShowcasePriv",
+                             fluidRow(
+                               fluidRow(
+                                 column(6,
+                                        shiny::fileInput('in_priv_rdata', 'Load your R spatial objects', 
+                                                         buttonLabel = 'Search RDATA', placeholder = 'No file',
+                                                         accept=c('.RData'), multiple=FALSE)),
+                                 column(6, )),
+                                 
+                               # img(src=file.path(mdPath, 'showcase.gif')
+                               #     #, align = "left",height='250px',width='500px'
+                               # )
+                               fluidPage(
+                                 leafletOutput("ll_map_showPriv", height = "600px") %>% 
+                                   withSpinner(color="#0dc5c1")
+                               )
                                
                              )
                     )
@@ -1250,11 +1271,12 @@ server <- function(input, output, session) {
         
         #inPoints <<- input$in_points_ly
         #pdebug(devug = devug, pre = '\n', sep = '\n-',  '(rv$hs)', 'rv$hs2s', 'rv$point_choices', "input$in_points_ly", 'inPoints')
-        rv$point_choices <- unique(c(rv$point_choices, 'Habitatsuitability'))
-        updateSelectizeInput(session, "in_points_ly", 
+        rv$point_choices <<- unique(c(rv$point_choices, 'Habitatsuitability'))
+        updateSelectizeInput(session, inputId = "in_points_ly", 
+                             selected = 'Habitatsuitability',
                              choices = rv$point_choices,
                              server = TRUE)
-        #pdebug(devug = devug, pre = '\n', sep = '\n-', '(rv$hs)', 'rv$hs2s', 'rv$point_choices', "input$in_points_ly", 'inPoints2')
+        pdebug(devug = devug, pre = '\n', sep = '\n-', 'rv$point_choices')
       } 
       
       
@@ -1286,7 +1308,9 @@ server <- function(input, output, session) {
         rv$point_choices <- unique(c(rv$point_choices, 'SurfaceResistance'))
         updateSelectizeInput(session, "in_points_ly", 
                              choices = rv$point_choices,
+                             selected = 'SurfaceResistance',
                              server = TRUE)
+        pdebug(devug = devug, pre = '\n', sep = '\n-', 'rv$point_choices')
         #pdebug(devug = devug, pre = '\n', sep = '\n-', 'rv$tif', 'rv$point_choices', "input$in_points_ly")
       }
       
@@ -1418,6 +1442,7 @@ server <- function(input, output, session) {
   }
   
   output$ll_map_show <- renderLeaflet({ ll_sh })
+  output$ll_map_showPriv <- renderLeaflet({  llmap })
   
   updateVTEXT <- function(txt, devug = FALSE){
     if(devug){print(txt)}
@@ -2578,7 +2603,7 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$points_py, {
-    if(!rv$tifready){
+    if(! (rv$tifready | rv$hsready)){
       rv$log <- paste0(rv$log, ' \n Creating points -- No raster yet!');updateVTEXT(rv$log) # _______
     } else {
       rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
@@ -2597,13 +2622,14 @@ server <- function(input, output, session) {
       
       out_pts <- paste0(tempFolder, '/out_simpts_', rv$inSurSessID, '.shp')
       
-      print(rv$in_points_ly)
+      in_points_ly <<- input$in_points_ly
+      pdebug(devug=devug,sep='\n',pre='---PTS\n',"inPts", 'rv$in_points_ly','in_points_ly') # = = = = = = =  = = =  = = =  = = =  = = = http://18.190.126.82:8787/p/f2dab63b/#shiny-tab-tab_surface
+      print(in_points_ly)
       
-      inPts <- switch (rv$in_points_ly,
+      inPts <<- switch (in_points_ly,
                        SurfaceResistance = rv$hs,
                        HabitatSuitability = rv$tif)
       
-      pdebug(devug=devug,sep='\n',pre='---PTS\n',"inPts") # = = = = = = =  = = =  = = =  = = =  = = = http://18.190.126.82:8787/p/f2dab63b/#shiny-tab-tab_surface
       
       
       
@@ -3234,6 +3260,94 @@ server <- function(input, output, session) {
   })
   
   
+  ####### > Priv showcase  ------------------
+  
+  observeEvent(input$in_priv_rdata, {
+    
+    llgrp <- NULL; ll_priv <- leaflet() %>%  addTiles() %>%
+      addMeasure( position = "topright",
+                  primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
+                  activeColor = "#3D535D",completedColor = "#7D4479") %>%
+      addMiniMap( tiles = providers$Esri.WorldStreetMap, toggleDisplay = TRUE)
+    
+    colPts <- colorFactor(palette = 'RdYlGn', 1:10)
+    
+    
+    output$ll_map_showPriv <- renderLeaflet({
+      
+      rdata2load <<- input$in_priv_rdata$datapath
+      #rdata2load <- '/home/shiny/scenarios.RData'
+      files2load <<- load(rdata2load)
+      
+      inputsPoints <- grep('points', files2load, value = TRUE)
+      inputsRaster <- grep('userinput__', files2load, value = TRUE)
+      outputsRaster <- grep('useroutput__', files2load, value = TRUE)
+      
+      if(length(inputsPoints) > 0){
+        for(i in 1:length(inputsPoints)){ # i = 1
+          assign("pt2ll", eval(parse(text = inputsPoints[i])))
+          
+          if(class(pt2ll) == 'SpatialPointsDataFrame'){
+            pt2ll <- spTransform(pt2ll, CRSobj = CRS('EPSG:4326'))
+            pt2ll@data[, c('ln', 'lt')] <- coordinates(pt2ll)
+            ptname <- gsub('userinput__|useroutput__', "", inputsPoints[i])
+            
+            ll_priv <- ll_priv %>% 
+              addCircleMarkers(lng = pt2ll$ln,
+                               lat = pt2ll$lt, color = colPts(sample(1:10, 1)),
+                               group = ptname, radius = 1)
+            llgrp <- c(llgrp, ptname)
+          }
+          
+        }
+      }
+      
+      
+      ll_priv <- ll_priv %>%
+        addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
+        addLayersControl(baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+                         overlayGroups = llgrp,
+                         options = layersControlOptions(collapsed = FALSE)) 
+      
+    })
+    
+    # 
+    # sh_hs_pal <- colorNumeric(palette = "viridis", reverse = TRUE,
+    #                           domain = cellStats(sh_hs, stat = range) + 0.1,
+    #                           na.color = "transparent")
+    # sh_sr_pal <- colorNumeric(palette = "magma", reverse = TRUE,
+    #                           domain = cellStats(sh_sr, stat = range)+ 0.1,
+    #                           na.color = "transparent")
+    # sh_crk_pal <- colorNumeric(palette = "inferno", reverse = TRUE,
+    #                            domain = cellStats(sh_crk, stat = range)+ 0.1,
+    #                            na.color = "transparent")
+    # sh_lcc_pal <- colorNumeric(palette = "plasma", reverse = TRUE,
+    #                            domain = cellStats(sh_lcc, stat = range)+ 0.1,
+    #                            na.color = "transparent")
+    # 
+    # # addCircleMarkers(lng = cmlng, lat = cmlat, group = "draw")
+    # 
+    #  %>%
+    #   
+    #   addCircleMarkers(lng = sh_pt$ln, lat = sh_pt$lt, group = "Points", radius = 1) %>%
+    #   
+    #   addRasterImage(sh_hs, colors = sh_hs_pal, opacity = .7, 
+    #                  group = "HabitatSuitability", layerId = "HabitatSuitability") %>%
+    #   # addCircleMarkers(sh_pt, group = "draw") %>%
+    #   # ll_sh %>%
+    #   addLegend(pal =  sh_hs_pal, values = cellStats(sh_hs, stat = range), 
+    #             group = "HabitatSuitability", layerId = "HabitatSuitability",
+    #             position = 'bottomleft', title = "Hab. suitability")  %>%
+    #   
+    #  
+    # 
+    # pdebug(devug=devug,pre='\n\t Load RDATA\n', sep='\n','files2load', 'rdata2load')
+    
+    
+    
+  })
+  
+  # 
   ####### > Download buttons  ------------------
   
   {
@@ -3326,10 +3440,7 @@ server <- function(input, output, session) {
                       overwrite=TRUE)
         }
       })
-    
-    
   }
-  
 }
 
 if (FALSE){
@@ -3395,6 +3506,7 @@ shinyApp(ui, server)
 ###### LINUX SERVER COPY -------------
 # http://18.190.126.82:3838/cola/
 # sudo cp /home/shiny/connectscape/app/app.R /srv/shiny-server/cola/app.R
+# cp /home/shiny/connectscape/app/app.R /srv/shiny-server/cola/app.R
 # sudo cp /home/shiny/connectscape/app /srv/shiny-server/cola -R
 #
 # cp /home/shiny/connectscape/app/app.R /home/shiny/cola/connecting-landscapes/app.R; sudo rm /srv/shiny-server/connecting-landscapes -R
