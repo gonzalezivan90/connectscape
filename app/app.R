@@ -1,8 +1,7 @@
 ### step by step version
 ## workign version meant to scale by steps
 # system('cd /home/shiny/connectscape/app; git add . ; git commit -m "some edits"; git push')
-# ghp_
-# 6ZjsBdNHWJvsfp3UP5JTt2hrlZjabI4M75hJ
+# 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
 # git pull connectscape
 
 {
@@ -64,6 +63,9 @@
   mdPath <- '/home/shiny/connecting-landscapes/docs'; #dir.create(rootPath)
   devug <<- TRUE
   
+  #tempFolder <- paste0(rootPath, '/2023082821124805_file5762732c645/')
+  #rootPath <- sort(Sys.getenv(c("TEMP", 'TMP')), decreasing=T)[1]
+  py <- '/home/shiny/anaconda3/envs/cola3/bin/python'
   
   logPath <<- '/data/tempR/logFoldersR.txt' 
   showcasePath <<- '/home/shiny/connecting-landscapes/showcase/'
@@ -150,11 +152,6 @@ delFiles <- function(...){
   ))
 }
 
-#tempFolder <- paste0(rootPath, '/2023082821124805_file5762732c645/')
-
-#rootPath <- sort(Sys.getenv(c("TEMP", 'TMP')), decreasing=T)[1]
-
-py <- '/home/shiny/anaconda3/envs/cdujlab/bin/python'
 
 runCDPOP <- function(py, datapath = tempFolder){
   # outfiles: 
@@ -272,7 +269,10 @@ lcc_py <- function(py, inshp, intif, outtif, param4, param5,
 
 
 lcc_py2 <- function(py, inshp, intif, outtif, param4, param5,
-                   param6, param7 = nCores, param8 = 'None'){
+                   param6, param7 = nCores, param8 = 'None', tempFolder = rootPath){
+  
+  "lcc_hdf5_v6.py"
+  "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
   # param3 = 25000
   # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
   # [2] resistance surface
@@ -280,15 +280,34 @@ lcc_py2 <- function(py, inshp, intif, outtif, param4, param5,
   # [4] distance threshold (should be in meters*)
   # [5] corridor smoothing factor (in number of cells)
   # [6] corridor tolerance (in cost distance units)
+  # [7] number of cores
+  # [8] projection if missing
+  # [9] first h5 temp file
+  # [10] secont h5 temp file
+  # [11] Max GB ram allowed
   
-  src <- '/home/shiny/connecting-landscapes/src/lcc_hdf5_v6.py'
+  
+  tempH5 <- sessionIDgen()
+  h5file1 <- paste0(rootPath, '/', tempFolder, '/', tempH5, '_A.h5')
+  h5file2 <- paste0(rootPath, '/', tempFolder, '/', tempH5, '_B.h5')
+  
+  src <- '/home/shiny/connecting-landscapes/src/lcc_hdf5_v7.py'
+  
   (cmd_lcc <- paste0(py, ' ', src, ' ', inshp, ' ', intif, ' ', outtif, ' ',
                      format(param4, scientific=F), ' ', 
                      format(param5, scientific=F), ' ', 
                      format(param6, scientific=F), " ",
-                     format(param7, scientific=F), " ", param8))
+                     format(param7, scientific=F), " ", 
+                     param8, " ", 
+                     h5file1, " ", 
+                     h5file2, " ", 
+                     '50'
+                      ))
+  
+  print(cmd_lcc)
   
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
+  file.remove(c(h5file1, h5file2))
   return(file = ifelse(file.exists(outtif), outtif, NA))
 }
 
@@ -528,7 +547,7 @@ if(file.exists(sh_object)){
 
   
   
-  #save(ll_sh, file = sh_object)
+  save(ll_sh, file = sh_object)
   # file.remove(sh_object)
   # rv$hs_sp <- raster(rv$hs)
   # #rng_newtif <- c(newtif@data@min, newtif@data@max)
@@ -546,6 +565,11 @@ if(file.exists(sh_object)){
 
 #  >> UI ---------------------------------------------------------------------------
 # https://cran.r-project.org/web/packages/dashboardthemes/vignettes/using_dashboardthemes.html
+
+css <- '.nav-tabs>li>a {
+  font-family: "Lucida Sans", sans-serif;
+  color: red;
+}'
 
 ui <- dashboardPage(
   # useShinyjs(),
@@ -677,16 +701,18 @@ ui <- dashboardPage(
       shinyDashboardThemes(
         theme = "grey_dark"
       ),
+      tags$style(HTML("
+    .tabbable > .nav > li > a {background-color: grey;  color:white;}
+  ")),
       tabItems(
         
         # tab_home tab_surface tab_points tab_distance tab_cdpop 
         # tab_corridors tab_kernels tab_plotting tab_Mapping tab_priori tab_genetics tablocal           
-        
         tabItem('tab_home', 
                 fluidPage(
                   #includeMarkdown("md_intro.md")
                   tabsetPanel(
-                    type = "pills",
+                    type = "pills", 
                     tabPanel(
                       "Home", 
                       includeMarkdown(
@@ -850,6 +876,8 @@ ui <- dashboardPage(
         
         
         tabItem('tab_surface',
+                h2(' Create surface resistance'),
+                
                 verbatimTextOutput("vout_h2r") , # %>% withSpinner(color="#0dc5c1")
                 fluidPage(
                   column(2, textInput("in_surf_3", "Min-grid:", '0')),
@@ -857,7 +885,9 @@ ui <- dashboardPage(
                   column(2, textInput("in_surf_5", "Max-resistance:", '100')),
                   column(2, textInput("in_surf_6", "Shape:", '1')),
                   column(2, textInput("in_surf_7", "No Data:", '-9999')),
-                  column(2, actionButton("h2r", HTML("Get resistance\nsurface")),
+                  column(2, 
+                         actionButton("h2rsample", HTML("Load sample file")),
+                         actionButton("h2r", HTML("Get resistance\nsurface")),
                          downloadButton('tifDwn', 'Download')) ),
                 fluidPage(
                   leafletOutput("ll_map_h2r", height = "600px") %>% 
@@ -865,6 +895,8 @@ ui <- dashboardPage(
         ),
         
         tabItem('tab_edit',
+                h2(' Customize surface resistance'),
+                
                 verbatimTextOutput("vout_edi") , # %>% withSpinner(color="#0dc5c1")
                 fluidPage(
                   column(4, h6(paste(
@@ -886,7 +918,7 @@ ui <- dashboardPage(
         ####### UI Tab points ----
         
         tabItem('tab_points',
-                h1(' Create points'),
+                h2(' Create points'),
                 verbatimTextOutput("vout_points"), # %>% withSpinner(color="#0dc5c1"),
                 fluidPage(
                   column(2, textInput("in_points_3", "Min-grid:", '2')),
@@ -905,7 +937,7 @@ ui <- dashboardPage(
         #### UI Tab distance ----
         
         tabItem('tab_distance',
-                h1(' Create Distance'),
+                h2(' Create Distance'),
                 verbatimTextOutput("vout_dist"), # %>% withSpinner(color="#0dc5c1"),
                 fluidPage(
                   column(2, textInput("in_dist_3", "Distance threshold (in cost distance units):", '25000')),
@@ -919,13 +951,14 @@ ui <- dashboardPage(
         ##> vout_dist; ll_map_dist; dist_py; in_distance_3, in_distance_shp in_dist_tif
         
         tabItem('tab_corridors',
-                h1(' Create corridors'),
+                h2(' Create corridors'),
                 verbatimTextOutput("vout_lcc"), # %>% withSpinner(color="#0dc5c1"),
                 fluidPage(
                   column(3, textInput("in_lcc_4", "Distance threshold (in distance units):", '500000')),
                   column(3, textInput("in_lcc_5", "Corridor smoothing factor:", '5')),
                   column(3, textInput("in_lcc_6", "Corridor tolerance (in cost distance units):", '5')),
                   column(3, actionButton("lcc", "Get corridors"),
+                         actionButton("lcc2", "Get corridors (heavy)"), 
                          downloadButton('lccDwn', 'Download'))
                 ),
                 leafletOutput("ll_map_lcc", height = "600px") %>% withSpinner(color="#0dc5c1")
@@ -933,7 +966,7 @@ ui <- dashboardPage(
         ),
         
         tabItem('tab_kernels',
-                h1(' Create kernels'),
+                h2(' Create kernels'),
                 verbatimTextOutput("vout_crk"), # %>% withSpinner(color="#0dc5c1")
                 fluidPage(
                   column(3, textInput("in_crk_4", "Distance threshold (in cost distance unit):", '25000')),
@@ -950,54 +983,56 @@ ui <- dashboardPage(
         ),
         
         # tabItem('tab_plotting',
-        #         h1(' Create plots'),
+        #         h2(' Create plots'),
         #         leafletOutput("ll_map_plot", height = "600px") %>% withSpinner(color="#0dc5c1")
         # ),
         # 
         # tabItem('tab_mapping',
-        #         h1(' Create maps'),
+        #         h2(' Create maps'),
         #         leafletOutput("ll_map_map", height = "600px") %>% withSpinner(color="#0dc5c1")
         # ),
         
         tabItem('tab_priori',
-                h1(' Priorization'),
+                h2(' Priorization'),
                 h6('    Comming soon ... stay tuned')
         ),
         tabItem('tab_genetics',
-                h1(' Landscape genetics'),
+                h2(' Landscape genetics'),
                 h6('    Comming soon ... stay tuned')
         ),
         tabItem('tab_local',
-                h1(' Running this locally'),
+                h2(' Running this locally'),
                 h6('    Comming soon ... stay tuned')
         ),
         
         tabItem('tab_coords',
-                h1(' Assigning projection to your points or raster'),
-                h6('    Comming soon ... stay tuned'),
+                h2(' Assigning projection to your points or raster'),
                 fluidRow(
-                  column(6,
-                         
-                         shiny::fileInput(
+                  column(6, shiny::fileInput(
                            'in_uncrs_tif', 'Load ASCII or RSG file', 
                            buttonLabel = 'Search', placeholder = 'No file',
-                           accept=c('.asc', '.rsg'),
-                           multiple=FALSE),
-                         actionButton("coo_tif", HTML("Assign raster projection")),
+                           accept=c('.asc', '.rsg'), multiple=FALSE)
                   ),
-                  
-                  column(6,
-                         shiny::fileInput(
+                  column(6, shiny::fileInput(
                            'in_uncrs_pts', 'Load CSV or XY file', 
                            buttonLabel = 'Search', placeholder = 'No file',
-                           accept=c('.xy', '.csv'),
-                           multiple=FALSE),
+                           accept=c('.xy', '.csv'), multiple=FALSE)
+                  )),
+                fluidRow(
+                  column(3, 
+                         selectizeInput("sel_crs", "Select", choices = NULL), #
+                         ),
+                  column(3, 
+                         actionButton("coo_tif", HTML("Assign raster projection")),
+                         ),
+                  column(3,
+                         selectizeInput("sel_crs2", "Select", choices = NULL), #
+                         ),
+                  column(3, 
                          actionButton("coo_pts", HTML("Assign raster proyection")),
-                         
-                  )
+                         ),
                 ),
                 # https://shiny.posit.co/r/articles/build/selectize/
-                selectizeInput("sel_crs", "Select", choices = NULL), #
                 leafletOutput("ll_coord", height = "600px") %>% withSpinner(color="#0dc5c1")
                 
         )
@@ -1629,7 +1664,11 @@ server <- function(input, output, session) {
   
   updateSelectizeInput(session, inputId = 'sel_crs', 
                        choices = c("", crs_df$label), 
-                       selected = NA, server = TRUE) 
+                       selected = NA, server = TRUE)
+  
+  updateSelectizeInput(session, inputId = 'sel_crs2', 
+                       choices = c("", crs_df$label), 
+                       selected = NA, server = TRUE)
   
   observeEvent(input$in_uncrs_pts, {
     invisible(suppressWarnings(
@@ -2279,32 +2318,32 @@ server <- function(input, output, session) {
           makeLL( )
           
           {
-          # 
-          # leafsurface <<- rv$llmap %>% removeControl('legendSurface') %>% removeImage('SurfaceResistance')  %>%
-          #   addRasterImage(hs2rs_tif, colors = rsPal, opacity = .7,
-          #                  layerId = 'SurfaceResistance',
-          #                  group = "Surface resistance") %>%
-          #   addLegend(pal =  rsPal, values = hs2rs_tif[], layerId = 'legendSurface',
-          #             position = 'bottomleft',
-          #             title= "Resistance surface"#, opacity = .3
-          #             #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
-          #   )  %>% addLayersControl(
-          #     baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-          #     overlayGroups = c("Habitat suitability", "Surface resistance"),
-          #     options = layersControlOptions(collapsed = FALSE)
-          #   ) %>% clearBounds() %>% addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) 
-          # 
-          # rv$llmap <<- llmap <<- leafsurface
-          # updateLL(leafsurface)
-          # # leafsurface
-          # #llmap
-          # rv$llmap
-          
-          # pointssurface <<- leafsurface
-          # output$ll_map_points <- renderLeaflet({pointssurface})
-          # 
-          # distancesurface <<- leafsurface
-          # output$ll_map_dist <- renderLeaflet({distancesurface})
+            # 
+            # leafsurface <<- rv$llmap %>% removeControl('legendSurface') %>% removeImage('SurfaceResistance')  %>%
+            #   addRasterImage(hs2rs_tif, colors = rsPal, opacity = .7,
+            #                  layerId = 'SurfaceResistance',
+            #                  group = "Surface resistance") %>%
+            #   addLegend(pal =  rsPal, values = hs2rs_tif[], layerId = 'legendSurface',
+            #             position = 'bottomleft',
+            #             title= "Resistance surface"#, opacity = .3
+            #             #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
+            #   )  %>% addLayersControl(
+            #     baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+            #     overlayGroups = c("Habitat suitability", "Surface resistance"),
+            #     options = layersControlOptions(collapsed = FALSE)
+            #   ) %>% clearBounds() %>% addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) 
+            # 
+            # rv$llmap <<- llmap <<- leafsurface
+            # updateLL(leafsurface)
+            # # leafsurface
+            # #llmap
+            # rv$llmap
+            
+            # pointssurface <<- leafsurface
+            # output$ll_map_points <- renderLeaflet({pointssurface})
+            # 
+            # distancesurface <<- leafsurface
+            # output$ll_map_dist <- renderLeaflet({distancesurface})
           }
         } else {
           rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resitance" TIF file')
@@ -2314,6 +2353,38 @@ server <- function(input, output, session) {
         
       })
     }
+  })
+  
+  
+  
+  observeEvent(input$h2rsample, {
+    
+      # rv <- list(newtifPath = '/data/temp//E-2023082911285005_file3112135d2b4c//in_surface_V-2023082911285705_file3112303ea820.tif',
+      #            inSurSessID = 'V-2023082911285705_file3112303ea820')
+      # input <- list(in_surf_3 = 0, in_surf_4 =100, in_surf_5 = 100, in_surf_6 = 1, in_surf_7 = -9999)
+      output$ll_map_h2r <- renderLeaflet({
+        
+        (inSurSessID <<- sessionIDgen())
+        rv$inSurSessID <<- inSurSessID
+        hs2rs_file <- paste0(mdPath, '/size4.tif')
+        
+          rv$tifready <- TRUE
+          rv$tif <- hs2rs_file
+          
+          rv$tif_sp <- hs2rs_tif <- raster(hs2rs_file)
+          rv$tif_rng <- rng_rstif <- cellStats(hs2rs_tif, stat = range)
+          rv$tif_pal <- rsPal <<-  colorNumeric(palette = "viridis", reverse = TRUE,
+                                                domain = rng_rstif, na.color = "transparent")
+          
+          
+          # rv$llmap rv$hsready rv$tifready rv$ptsready #  rv$llmap
+          #rv$llmap <<- rv$llmap %>% 
+          #leafsurface <<- leaflet() %>% addTiles() %>% 
+          
+          # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = =  = = =  = = =  = = =  = = = 
+          makeLL( )
+        
+      })
   })
   
   
@@ -3046,11 +3117,70 @@ server <- function(input, output, session) {
           rv$lcc_sp <- out_lcc <- raster(out_lcc)
           
           rv$lcc_rng <- rng_newtif <- cellStats(out_lcc, stat = range)
-          rv$lcc_pal <- tifPal <<-  colorNumeric(palette = "magma", reverse = TRUE,
-                                                 domain = rng_newtif+0.1, na.color = "transparent")
-          
+          rv$lcc_pal <- tifPal <<-  colorNumeric(c("red3", "gold", "navyblue"),
+                                                 reverse = TRUE,
+                                                 domain = rng_newtif+0.1, 
+                                                 na.color = "transparent")
           makeLL( )
+        }
+      })
+      
+    }
+  })
+  
+  observeEvent(input$lcc2, {
+    pdebug(devug=devug,sep='\n',pre='\n---- RUN LCC\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________ 
+    condDist <<- 0
+    #pdebug(devug=devug, ... = 'condDist') # _____________
+    if(rv$ptsready & rv$tifready){
+      condDist <<- 1
+    }
+    #pdebug(devug=devug, ... = 'condDist') # _____________
+    
+    if(is.null(rv$inLccSessID)){
+      (inLccSessID <<- sessionIDgen())
+      rv$inLccSessID <- inLccSessID
+    }
+    
+    
+    if( condDist == 1){
+      #input <- c(in_dist_3 = 25000)
+      rv$log <- paste0(rv$log, '\n Generating corridors');updateVTEXT(rv$log) # _______
+      
+      output$ll_map_lcc <- renderLeaflet({  
+        
+        out_lcc <- paste0(tempFolder, '/out_lcc_', rv$inLccSessID, '.tif')
+        tStartLcc <- Sys.time()
+        #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
+        out_lcc <- lcc_py2 (py = py, tempFolder = tempFolder,
+                            inshp = rv$pts, intif = rv$tif, outtif = out_lcc,
+                           param4 = as.numeric(input$in_lcc_4),
+                           param5 = as.numeric(input$in_lcc_5),
+                           param6 = as.numeric(input$in_lcc_6),
+                           param7 = 1)
+        tElapLcc <- Sys.time() - tStartLcc
+        textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
+        
+        rv$log <- paste0(rv$log, ' - Time elapsed: ', tElapLcc);updateVTEXT(rv$log) # _______
+        
+        pdebug(devug=devug,sep='\n',pre='\n \t |||| ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
+        
+        if(!file.exists(out_lcc)){
+          rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
+          rv$llmap
+        } else {
+          rv$log <- paste0(rv$log, ' --- DONE: ', textElapLcc);updateVTEXT(rv$log) # _______
           
+          rv$lcc <- out_lcc
+          rv$lccready <- TRUE
+          rv$lcc_sp <- out_lcc <- raster(out_lcc)
+          
+          rv$lcc_rng <- rng_newtif <- cellStats(out_lcc, stat = range)
+          rv$lcc_pal <- tifPal <<-  colorNumeric(c("red3", "gold", "navyblue"),
+                                                 reverse = TRUE,
+                                                 domain = rng_newtif+0.1, 
+                                                 na.color = "transparent")
+          makeLL( )
         }
       })
       
@@ -3264,24 +3394,28 @@ server <- function(input, output, session) {
   
   observeEvent(input$in_priv_rdata, {
     
-    llgrp <- NULL; ll_priv <- leaflet() %>%  addTiles() %>%
+    
+    
+    output$ll_map_showPriv <- renderLeaflet({
+      
+    
+      llgrp <- NULL; ll_priv <- leaflet() %>%  addTiles() %>%
       addMeasure( position = "topright",
                   primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
                   activeColor = "#3D535D",completedColor = "#7D4479") %>%
       addMiniMap( tiles = providers$Esri.WorldStreetMap, toggleDisplay = TRUE)
     
-    colPts <- colorFactor(palette = 'RdYlGn', 1:10)
-    
-    
-    output$ll_map_showPriv <- renderLeaflet({
-      
+      colPts <- colorFactor(palette = 'RdYlGn', 1:10)
       rdata2load <<- input$in_priv_rdata$datapath
       #rdata2load <- '/home/shiny/scenarios.RData'
       files2load <<- load(rdata2load)
+      file.remove(input$in_priv_rdata$datapath)
       
-      inputsPoints <- grep('points', files2load, value = TRUE)
-      inputsRaster <- grep('userinput__', files2load, value = TRUE)
-      outputsRaster <- grep('useroutput__', files2load, value = TRUE)
+      inputsPoints <- grep('poinfts', files2load, value = TRUE)
+      inputsRaster <- grep('points', value = TRUE, invert = TRUE, 
+                           grep('userinput__', files2load, value = TRUE))
+      outputsRaster <- grep('points', value = TRUE, invert = TRUE, 
+                            grep('useroutput__', files2load, value = TRUE))
       
       if(length(inputsPoints) > 0){
         for(i in 1:length(inputsPoints)){ # i = 1
@@ -3298,49 +3432,68 @@ server <- function(input, output, session) {
                                group = ptname, radius = 1)
             llgrp <- c(llgrp, ptname)
           }
-          
         }
       }
       
+      if(length(inputsRaster) > 0){
+        for(i in 1:length(inputsRaster)){ # i = 1
+          assign("rast2ll", eval(parse(text = inputsRaster[i])))
+          
+          if(class(rast2ll) == 'RasterLayer'){
+            ptname <- gsub('userinput__|useroutput__', "", inputsRaster[i])
+            
+            r_pal <- colorNumeric(palette = sample(c('viridis', 'magma',  'inferno',  'plasma'), 1), 
+                                  reverse = TRUE,
+                                  domain = cellStats(rast2ll, stat = range) + 0.1,
+                                  na.color = "transparent")
+            
+            ll_priv <- ll_priv %>%
+              addRasterImage(rast2ll, colors = r_pal, opacity = .7,
+                             group = ptname, 
+                             layerId = ptname) %>%
+              addLegend(pal =  r_pal, values = cellStats(rast2ll, stat = range),
+                        group = ptname, layerId = ptname,
+                        position = 'bottomleft', title = ptname) 
+            
+            llgrp <- c(llgrp, ptname)
+          }
+        }
+      }
+      
+      if(length(outputsRaster) > 0){
+        for(i in 1:length(outputsRaster)){ # i = 1
+          assign("rast2ll", eval(parse(text = outputsRaster[i])))
+          
+          if(class(rast2ll) == 'RasterLayer'){
+            ptname <- gsub('userinput__|useroutput__', "", outputsRaster[i])
+            
+            r_pal <- colorNumeric(palette = sample(c('viridis', 'magma', 
+                                                     'inferno',  'plasma'), 1), 
+                                  reverse = TRUE,
+                                  domain = cellStats(rast2ll, stat = range) + 0.1,
+                                  na.color = "transparent")
+            
+            ll_priv <- ll_priv %>%
+              addRasterImage(rast2ll, colors = r_pal, opacity = .7,
+                             group = ptname, 
+                             layerId = ptname) %>%
+              addLegend(pal =  r_pal, values = cellStats(rast2ll, stat = range),
+                        group = ptname, layerId = ptname,
+                        position = 'bottomleft', title = ptname) 
+            
+            llgrp <- c(llgrp, ptname)
+          }
+        }
+      }
       
       ll_priv <- ll_priv %>%
         addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
         addLayersControl(baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
                          overlayGroups = llgrp,
                          options = layersControlOptions(collapsed = FALSE)) 
-      
+    
     })
     
-    # 
-    # sh_hs_pal <- colorNumeric(palette = "viridis", reverse = TRUE,
-    #                           domain = cellStats(sh_hs, stat = range) + 0.1,
-    #                           na.color = "transparent")
-    # sh_sr_pal <- colorNumeric(palette = "magma", reverse = TRUE,
-    #                           domain = cellStats(sh_sr, stat = range)+ 0.1,
-    #                           na.color = "transparent")
-    # sh_crk_pal <- colorNumeric(palette = "inferno", reverse = TRUE,
-    #                            domain = cellStats(sh_crk, stat = range)+ 0.1,
-    #                            na.color = "transparent")
-    # sh_lcc_pal <- colorNumeric(palette = "plasma", reverse = TRUE,
-    #                            domain = cellStats(sh_lcc, stat = range)+ 0.1,
-    #                            na.color = "transparent")
-    # 
-    # # addCircleMarkers(lng = cmlng, lat = cmlat, group = "draw")
-    # 
-    #  %>%
-    #   
-    #   addCircleMarkers(lng = sh_pt$ln, lat = sh_pt$lt, group = "Points", radius = 1) %>%
-    #   
-    #   addRasterImage(sh_hs, colors = sh_hs_pal, opacity = .7, 
-    #                  group = "HabitatSuitability", layerId = "HabitatSuitability") %>%
-    #   # addCircleMarkers(sh_pt, group = "draw") %>%
-    #   # ll_sh %>%
-    #   addLegend(pal =  sh_hs_pal, values = cellStats(sh_hs, stat = range), 
-    #             group = "HabitatSuitability", layerId = "HabitatSuitability",
-    #             position = 'bottomleft', title = "Hab. suitability")  %>%
-    #   
-    #  
-    # 
     # pdebug(devug=devug,pre='\n\t Load RDATA\n', sep='\n','files2load', 'rdata2load')
     
     
@@ -3508,7 +3661,7 @@ shinyApp(ui, server)
 # sudo cp /home/shiny/connectscape/app/app.R /srv/shiny-server/cola/app.R
 # cp /home/shiny/connectscape/app/app.R /srv/shiny-server/cola/app.R
 # sudo cp /home/shiny/connectscape/app /srv/shiny-server/cola -R
-#
+# 
 # cp /home/shiny/connectscape/app/app.R /home/shiny/cola/connecting-landscapes/app.R; sudo rm /srv/shiny-server/connecting-landscapes -R
 # shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 20, users.per.session = 5)
 # http://18.190.126.82:3838/connecting-landscapes
