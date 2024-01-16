@@ -396,7 +396,7 @@ crk_py <- function(py, inshp, intif, outtif, param4,
 
 
 ### Only pix size
-fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
+fitRaster2colaOnlyPxSize <- function(inrasterpath, outrasterpath = NULL){
   # setwd('N:/Mi unidad/git/connecting-landscapes/performance-tests/inputs')
   
   # inrasterpath = 'orig_tifs/size6.tif'
@@ -494,7 +494,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
 }
 
 ### Orig fitRaster2cola, cell size and nodata
-fitRaster2colaOrig <- function(inrasterpath, outrasterpath = NULL){
+fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
   # setwd('N:/Mi unidad/git/connecting-landscapes/performance-tests/inputs')
   
   # inrasterpath = 'orig_tifs/size6.tif'
@@ -710,6 +710,24 @@ loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
   return(outshp)
 }
 
+getMxMn <- function(rastPath){
+  # rastPath = '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
+  rst <- terra::rast(rastPath)
+  ra <- minmax(rst)[1:2]
+  if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
+    return(ra)
+  } else {
+    (ra <- range(rst[], na.rm = TRUE))
+    if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
+      return(ra)
+    } else {
+      ra <- global(rst, 'range' )
+      if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
+        return(ra)
+      }
+    }
+  }
+}
 
 pdebug <- function(devug, pre = '\n --\n', sep = '\n-',  ...){
   if (devug){
@@ -1639,6 +1657,19 @@ server <- function(input, output, session) {
       #        )
       
       
+      hs_pal_name <-  "viridis"
+      sr_pal_name <- "magma"
+      tif_pal_name <- "viridis"
+      crk_pal_name <- "inferno"
+      lcc_pal_name <- "plasma"
+      # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
+        
+        # colorNumeric(palette = "magma", reverse = TRUE,
+        #                         domain = range(sh_sr[], na.rm = TRUE)+ 0.1,
+        #                         na.color = "transparent")
+      
+      
+      
       if((rv$hsready)){
         pdebug(devug=devug,pre='\n MakeLL - HS\n',sep='\n-','rv$hs_pal','rv$hs_rng')
         
@@ -1648,14 +1679,18 @@ server <- function(input, output, session) {
           rv$hs2s <- resampIfNeeded(rv$hs)
           rv$hs0 <- rv$hs
           rv$hs2s_sp <-terra::rast(rv$hs2s)
-          rv$hs_pal <- 
+          rv$hs_rng2 <- getMxMn(rv$hs2s)+ 0.1 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
+          rv$hs_pal2 <- colorNumeric(palette = hs_pal_name, reverse = TRUE,
+                                     domain = rv$hs_rng2 + 0.1,
+                                     na.color = "transparent")
         }
         
         # pdebug(devug = devug, sep = '\n-', pre = '-', '(rv$hs)', 'rv$hs2s')
         
-        ll0 <- ll0 %>% addRasterImage(rv$hs2s_sp, colors = rv$hs_pal, opacity = .7, 
+        ll0 <- ll0 %>% addRasterImage(rv$hs2s_sp, colors = rv$hs_pal2, 
+                                      opacity = .7, 
                                       group = "Habitat suitability", layerId = "HabitatSuitability") %>%
-          addLegend(pal =  rv$hs_pal, values = rv$hs_rng, 
+          addLegend(pal =  rv$hs_pal2, values = rv$hs_rng2, 
                     group = "Habitat suitability", layerId = "Habitat suitability",
                     position = 'bottomleft', title = "Suitability"#, opacity = .3
                     #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
@@ -1677,19 +1712,23 @@ server <- function(input, output, session) {
         # pdebug(devug=devug,pre='\n MakeLL - TIF',sep='\n','rv$tif_pal','rv$tif_rng')
         
         if (rv$tif0 != rv$tif){
-          rv$tif2s <- resampIfNeeded(rv$tif)
-          rv$tif0 <- rv$tif
+          rv$tif2s <- resampIfNeeded(rv$origtif)
+          rv$tif0 <- rv$origtif
           rv$tif2s_sp <-terra::rast(rv$tif2s)
+          rv$tif_rng2 <- getMxMn(rv$tif2s) + 0.1 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
+          rv$tif_pal2 <- colorNumeric(palette = tif_pal_name, reverse = TRUE,
+                                     domain = rv$tif_rng2 + 0.1,
+                                     na.color = "transparent")
         }
         # pdebug(devug=devug,pre='\n MakeLL - TIF',sep='\n','rv$tif0')
         
         ll0 <- ll0 %>% 
-          addRasterImage(rv$tif2s_sp, colors = rv$tif_pal, 
+          addRasterImage(rv$tif2s_sp, colors = rv$tif_pal2, 
                          opacity = .7, 
                          group = "Surface resistance",
                          layerId = "Surfaceresistance") %>%
           
-          addLegend(pal =  rv$tif_pal, values = rv$tif_rng, 
+          addLegend(pal =  rv$tif_pal2, values = rv$tif_rng2, 
                     group = "Surface resistance",
                     layerId = "Surfaceresistance",
                     position = 'bottomleft', title = "Resistance"#, opacity = .3
@@ -1707,17 +1746,25 @@ server <- function(input, output, session) {
       }
       
       if((rv$lccready)){
+        
+        pdebug(devug=devug,pre='\n MakeLL - LCC ',sep='\n','rv$lcc')
+        # rv <- list(lcc = '/data/temp/YM2024011518570905file1a4cf94fe3cee0//out_lcc_XL2024011518571705file1a4cf962d6830f.tif')
+        
         grps <- c(grps, 'Corridors')
         
         if (rv$lcc0 != rv$lcc){
           rv$lcc2s <- resampIfNeeded(rv$lcc)
           rv$lcc0 <- rv$lcc
-          rv$lcc2s_sp <-terra::rast(rv$lcc2s)
+          rv$lcc2s_sp <- terra::rast(rv$lcc2s)
+          rv$lcc_rng2 <- getMxMn(rv$lcc2s) + 0.1 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
+          rv$lcc_pal2 <- colorNumeric(palette = lcc_pal_name, reverse = TRUE,
+                                      domain = rv$lcc_rng2 + 0.1,
+                                      na.color = "transparent")
         }
         
-        ll0 <- ll0 %>% addRasterImage(rv$lcc2s_sp, colors = rv$lcc_pal, opacity = .7, 
+        ll0 <- ll0 %>% addRasterImage(rv$lcc2s_sp, colors = rv$lcc_pal2, opacity = .7, 
                                       group = "Corridors", layerId = "Corridors") %>%
-          addLegend(pal =  rv$lcc_pal, values = rv$lcc_rng, 
+          addLegend(pal =  rv$lcc_pal2, values = rv$lcc_rng2, 
                     layerId = "Corridors", group = "Corridors",
                     position = 'bottomleft', title = "Corridors"#, opacity = .3
                     #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
@@ -1731,11 +1778,16 @@ server <- function(input, output, session) {
           rv$crk2s <- resampIfNeeded(rv$crk)
           rv$crk0 <- rv$crk
           rv$crk2s_sp <-terra::rast(rv$crk2s)
+          rv$crk_rng2 <- getMxMn(rv$crk2s) + 0.1 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
+          rv$crk_pal2 <- colorNumeric(palette = crk_pal_name, reverse = TRUE,
+                                      domain = rv$crk_rng2 + 0.1,
+                                      na.color = "transparent")
+          
         }
         
-        ll0 <- ll0 %>% addRasterImage(rv$crk2s_sp, colors = rv$crk_pal, opacity = .7, 
+        ll0 <- ll0 %>% addRasterImage(rv$crk2s_sp, colors = rv$crk_pal2, opacity = .7, 
                                       group = "Kernels", layerId = "Kernels") %>%
-          addLegend(pal =  rv$crk_pal, values = rv$crk_rng, 
+          addLegend(pal =  rv$crk_pal2, values = rv$crk_rng2, 
                     layerId = "Kernels", group = "Kernels",
                     position = 'bottomleft', title = "Kernels"#, opacity = .3
                     #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
@@ -2558,7 +2610,7 @@ server <- function(input, output, session) {
       
       (inSurSessID <<- sessionIDgen())
       rv$inSurSessID <<- inSurSessID
-      tifpath <- paste0(tempFolder, '/in_surface_', rv$inSurSessID, '.tif')
+      rv$orighs <- tifpath <- paste0(tempFolder, '/in_surface_', rv$inSurSessID, '.tif')
       tifpathfixed <- paste0(tempFolder, '/in_surface_fixed_', rv$inSurSessID, '.tif')
       
       
@@ -2660,8 +2712,8 @@ server <- function(input, output, session) {
           rv$tif <- hs2rs_file
           
           rv$tif_sp <- hs2rs_tif <-terra::rast(hs2rs_file)
-          #rv$tif_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
-          rv$tif_rng <- rng_rstif <- minmax(rv$tif_sp)[1:2]
+          rv$tif_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
+          #rv$tif_rng <- rng_rstif <- minmax(rv$tif_sp)[1:2]
           rv$tif_pal <- rsPal <<-  colorNumeric(palette = "viridis", reverse = TRUE,
                                                 domain = rng_rstif, na.color = "transparent")
           
@@ -2760,7 +2812,7 @@ server <- function(input, output, session) {
       #inSurSessID <- 'C2023082911165605_file31126374e76'
       (inEdiSessID <<- sessionIDgen())
       rv$inEdiSessID <<- inEdiSessID
-      tifpath <<- paste0(tempFolder, '/in_edit_', inEdiSessID, '.tif')
+      rv$origtif <- tifpath <<- paste0(tempFolder, '/in_edit_', inEdiSessID, '.tif')
       tifpathfixed <- paste0(tempFolder, '/in_edit_fixed_', inEdiSessID, '.tif')
       
       
@@ -2786,16 +2838,16 @@ server <- function(input, output, session) {
         rv$tifready <- TRUE
         
         rv$tif_sp <-terra::rast(rv$tif)
-        #rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
-        rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
+        #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
         
         
         rv$tif_pal <<-  colorNumeric(palette = "viridis", reverse = TRUE,
                                      domain = rng_newtif+0.1, na.color = "transparent")
         
         rv$edi_sp <-terra::rast(rv$edi)
-        #rv$edi_rng <- rng_newtif <- range(rv$edi_sp[], na.rm = TRUE)
-        rv$tif_rng <- rng_newtif <- range(minmax(rv$edi_sp)[1:2], na.rm = TRUE)
+        rv$edi_rng <- rng_newtif <- range(rv$edi_sp[], na.rm = TRUE)
+        #rv$tif_rng <- rng_newtif <- range(minmax(rv$edi_sp)[1:2], na.rm = TRUE)
         
         rv$edi_pal <- ediPal <<-  colorNumeric(palette = "magma", reverse = TRUE,
                                                domain = rng_newtif+0.1, na.color = "transparent")
@@ -2902,8 +2954,8 @@ server <- function(input, output, session) {
           rv$tif <- burned
           
           rv$tif_sp <- hs2rs_tif <-terra::rast(rv$tif)
-          #rv$tif_rng <- rng_rstif <- range(rv$tif_sp[], na.rm = TRUE)
-          rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+          rv$tif_rng <- rng_rstif <- range(rv$tif_sp[], na.rm = TRUE)
+          #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
           
           rv$tif_pal <- rsPal <<-  colorNumeric(palette = "viridis", reverse = TRUE,
                                                 domain = rng_rstif, na.color = "transparent")
@@ -2938,8 +2990,8 @@ server <- function(input, output, session) {
       rv$inPointsSessID <- inPointsSessID
     }
     
-    rv$tifpathpts <- paste0(tempFolder, '/in_points_', rv$inPointsSessID, '.tif')
-    file.copy(input$in_points_tif$datapath, rv$tifpathpts); 
+    rv$origtif <- paste0(tempFolder, '/in_points_', rv$inPointsSessID, '.tif')
+    file.copy(input$in_points_tif$datapath, rv$origtif); 
     #try(file.remove(input$in_points_tif$datapath))
     
     
@@ -2948,8 +3000,8 @@ server <- function(input, output, session) {
     rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
     
     rv$tifpathptsfix <- paste0(tempFolder, '/in_points_fixed_', rv$inPointsSessID, '.tif')
-    newtifPath_pts <- fitRaster2cola(inrasterpath = rv$tifpathpts, outrasterpath =  rv$tifpathptsfix)
-    newtifPath_pts <- ifelse(is.na(newtifPath_pts), yes = rv$tifpathpts, no = newtifPath_pts)
+    newtifPath_pts <- fitRaster2cola(inrasterpath = rv$origtif, outrasterpath =  rv$tifpathptsfix)
+    newtifPath_pts <- ifelse(is.na(newtifPath_pts), yes = rv$origtif, no = newtifPath_pts)
     rv$newtifpathpts <- newtifPath_pts
     
     if (file.exists(rv$newtifpathpts)){
@@ -3149,8 +3201,8 @@ server <- function(input, output, session) {
     }
     
     
-    rv$tifpathdist <- paste0(tempFolder, '/in_dist_', rv$inDistSessID, '.tif')
-    file.copy(input$in_dist_tif$datapath, rv$tifpathdist); 
+    rv$origtif <- paste0(tempFolder, '/in_dist_', rv$inDistSessID, '.tif')
+    file.copy(input$in_dist_tif$datapath, rv$origtif); 
     # try(file.remove(input$in_dist_tif$datapath))
     
     # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = =  = = =  = = =  = = =  = = = 
@@ -3158,7 +3210,7 @@ server <- function(input, output, session) {
     rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
     
     rv$tifpathdistfix <- paste0(tempFolder, '/in_dist_fixed_', rv$inDistSessID, '.tif')
-    newtifPath_dist <- fitRaster2cola(inrasterpath = rv$tifpathdist, outrasterpath = rv$tifpathdistfix)
+    newtifPath_dist <- fitRaster2cola(inrasterpath = rv$origtif, outrasterpath = rv$tifpathdistfix)
     newtifPath_dist <- ifelse(is.na(newtifPath_dist), yes = rv$tifpathpts, no = newtifPath_dist)
     rv$newtifPath_dist <- newtifPath_dist
     
@@ -3171,8 +3223,8 @@ server <- function(input, output, session) {
       output$ll_map_dist <- renderLeaflet({
         
         rv$tif_sp <- newtif <-terra::rast(newtifPath_dist)
-        #rv$tif_rng <- rng_newtif <- range(newtif[], na.rm = TRUE)
-        rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        rv$tif_rng <- rng_newtif <- range(newtif[], na.rm = TRUE)
+        #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
         
         rv$tif_pal <- tifPal <<- colorNumeric(palette = "viridis", reverse = TRUE,
                                               domain = rng_newtif, na.color = "transparent")
@@ -3309,9 +3361,6 @@ server <- function(input, output, session) {
                                 ncol(headMat), ' cols, ', nrow(headMat), ' rows.', 
                                 ' Time elapsed: ', textElapMat));updateVTEXT(rv$log) # _______
         
-        
-        
-        
         output$dist_box1 <- renderValueBox({
           valueBox(
             "YES", "Matrix: Done", icon = icon("thumbs-up", lib = "glyphicon"),
@@ -3345,9 +3394,9 @@ server <- function(input, output, session) {
     
     tifFixed <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
     
-    # rv <- list(tempFolder = '/data/temp/YM2024011512020305file178cf97a81eeae',
+    # rv <- list(tempFolder = '/data/temp/VK2024011517312305file1a4cf91dbd4cbd',
     #            origtif = '/data/temp/YM2024011512020305file178cf97a81eeae/in_lcc_XL2024011512024005file178cf941a24eb4.tif')
-    #tifFixed <- paste0('/data/temp/YM2024011512020305file178cf97a81eeae/in_lcc_fixedXL2024011512024005file178cf941a24eb4.tif')
+    # tifFixed <- '/data/temp/VK2024011517312305file1a4cf91dbd4cbd/in_lcc_fixedKH2024011517313705file1a4cf97fb7cce6.tif'
     
     newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$origtif, 
                                       outrasterpath = tifFixed)
@@ -3372,9 +3421,10 @@ server <- function(input, output, session) {
       
       output$ll_map_lcc <- renderLeaflet({
       
-        rv$tif_sp <-terra::rast(rv$tif)
-        #rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
-        rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        rv$tif_sp <- terra::rast(rv$tif)
+        
+        rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
+        #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
         rv$tif_pal <<-  colorNumeric(palette = "viridis", reverse = TRUE,
                                      domain = rng_newtif+0.1, na.color = "transparent")
         
@@ -3501,6 +3551,9 @@ server <- function(input, output, session) {
                            param5 = as.numeric(input$in_lcc_5),
                            param6 = as.numeric(input$in_lcc_6),
                            param7 = 1)
+        
+        # out_lcc <- '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
+        
         tElapLcc <- Sys.time() - tStartLcc
         textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
         
@@ -3519,8 +3572,8 @@ server <- function(input, output, session) {
           rv$lccready <- TRUE
           rv$lcc_sp <- out_lcc <-terra::rast(out_lcc)
           
-          #rv$lcc_rng <- rng_newtif <- range(out_lcc[], na.rm = TRUE)
-          rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
+          rv$lcc_rng <- rng_newtif <- range(out_lcc[], na.rm = TRUE)
+          #rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
           
           rv$lcc_pal <- tifPal <<-  colorNumeric(c("red3", "gold", "navyblue"),
                                                  reverse = TRUE,
@@ -3581,7 +3634,9 @@ server <- function(input, output, session) {
           rv$lcc_sp <- out_lcc <-terra::rast(out_lcc)
           
           #rv$lcc_rng <- rng_newtif <- range(out_lcc[], na.rm = TRUE)
-          rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
+          #rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
+          rv$lcc_rng <- rng_newtif <- getMxMn(rv$lcc)
+           
           
           rv$lcc_pal <- tifPal <<-  colorNumeric(c("red3", "gold", "navyblue"),
                                                  reverse = TRUE,
@@ -3614,14 +3669,14 @@ server <- function(input, output, session) {
     pdebug(devug=devug,sep='\n',pre='','rv$inSurSessID', 'rv$incrkSessID')
     
     
-    rv$tifpathcrk <- paste0(tempFolder, '/in_crk_',  rv$incrkSessID, '.tif')
-    file.copy(input$in_crk_tif$datapath, rv$tifpathcrk); 
+    rv$origtif <- paste0(tempFolder, '/in_crk_',  rv$incrkSessID, '.tif')
+    file.copy(input$in_crk_tif$datapath,rv$origtif); 
     # try(file.remove(input$in_crk_tif$datapath))
     
     rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
     
     rv$tifpathcrkfix <- paste0(tempFolder, '/in_crk_fixed_', rv$incrkSessID, '.tif')
-    newtifPath_crk <- fitRaster2cola(inrasterpath = rv$tifpathcrk, outrasterpath = rv$tifpathcrkfix)
+    newtifPath_crk <- fitRaster2cola(inrasterpath = rv$origtif, outrasterpath = rv$tifpathcrkfix)
     newtifPath_crk <- ifelse(is.na(newtifPath_crk), yes = rv$tifpathpts, no = newtifPath_crk)
     rv$newtifPath_crk <- newtifPath_crk
     
@@ -3634,8 +3689,8 @@ server <- function(input, output, session) {
       output$ll_map_crk <- renderLeaflet({
         
         rv$tif_sp <- newtif <-terra::rast(newtifPath_crk)
-        #rv$tif_rng <- rng_newtif <- range(newtif[], na.rm = TRUE)
-        rv$lcc_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        rv$tif_rng <- rng_newtif <- range(newtif[], na.rm = TRUE)
+        #rv$lcc_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
         
         rv$tif_pal <- tifPal <<-  colorNumeric(palette = "viridis", reverse = TRUE,
                                                domain = rng_newtif, na.color = "transparent")
@@ -3762,8 +3817,8 @@ server <- function(input, output, session) {
           rv$crkready <- TRUE
           rv$crk <- out_crk
           rv$crk_sp <- out_crk <-terra::rast(out_crk); #plot(newtif)
-          #rv$crk_rng <- rng_newtif <- range(out_crk[], na.rm = TRUE)
-          rv$crk_rng <- rng_newtif <- range(minmax(rv$crk_sp)[1:2], na.rm = TRUE)
+          rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+          #rv$crk_rng <- rng_newtif <- range(minmax(rv$crk_sp)[1:2], na.rm = TRUE)
           
           # newtif[newtif[] == 0] <- 
           
@@ -3985,7 +4040,7 @@ server <- function(input, output, session) {
           terra::writeRaster(rv$tif_sp, 
                       filename=filename, 
                       #options="INTERLEAVE=BAND", 
-                      format="GTiff", 
+                      #format="GTiff", 
                       overwrite=TRUE)
         }
       })
@@ -4006,7 +4061,7 @@ server <- function(input, output, session) {
           terra::writeRaster(rv$lcc_sp, 
                       filename=filename, 
                       #options="INTERLEAVE=BAND", 
-                      format="GTiff", 
+                      #format="GTiff", 
                       overwrite=TRUE)
         }
       })
@@ -4018,7 +4073,7 @@ server <- function(input, output, session) {
           terra::writeRaster(rv$crk_sp, 
                       filename=filename, 
                       #options="INTERLEAVE=BAND", 
-                      format="GTiff", 
+                      #format="GTiff", 
                       overwrite=TRUE)
         }
       })
@@ -4030,7 +4085,7 @@ server <- function(input, output, session) {
           terra::writeRaster(rv$tif_sp, 
                       filename=filename, 
                       #options="INTERLEAVE=BAND", 
-                      format="GTiff", 
+                      #format="GTiff", 
                       overwrite=TRUE)
         }
       })
@@ -4102,18 +4157,17 @@ shinyApp(ui, server)
 # sudo cp /home/shiny/connectscape/app/app.R /srv/shiny-server/cola/app.R
 # cp /home/shiny/connectscape/app/app.R /srv/shiny-server/cola/app.R
 # sudo cp /home/shiny/connectscape/app /srv/shiny-server/cola -R
-# 
+
 # cp /home/shiny/connectscape/app/app.R /home/shiny/cola/connecting-landscapes/app.R; sudo rm /srv/shiny-server/connecting-landscapes -R
 # shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 20, users.per.session = 5)
 # http://18.190.126.82:3838/connecting-landscapes
 # http://18.190.126.82:3838/connecting-landscapes/?admin
 
 # system('cd /home/shiny/connectscape/app; git add . ; git commit -m "some edits"; git push')
-# ghp_ # 
-# 5Ftoeqme7HnNJpW
-# BNaCH4bPJj5pGFm2PT4By # split or lost it
+# 
+# remove before commit, split or lost it
 # git pull connectscape
-
+# https://github.com/settings/tokens/1354187156/regenerate
 
 
 # R -e "shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)"
