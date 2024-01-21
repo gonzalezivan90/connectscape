@@ -4552,8 +4552,8 @@ shinyApp(ui, server)
 # http://18.190.126.82:3838/connecting-landscapes
 # http://18.190.126.82:3838/connecting-landscapes/?admin
 
-# system('cd /home/shiny/connectscape/app; git add . ; git commit -m "some edits"; git push')
-# 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
+# system('cd /home/shiny/connectscape/app; git add . ; git commit -m "new edits. Prio+, viz gdal resampler"; git push')
+# 
 # remove before commit, split or lost it
 # git pull connectscape |||  git pull --rebase --autostash || git pull origin HEAD
 
