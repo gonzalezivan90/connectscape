@@ -80,7 +80,7 @@ ggplot(subset(result), #, func == 'mat' & variable == 'ramgb'),
     #aes(#linetype = interaction(meth, npts))
   ) +
   labs(title = 'Elapsed computing time (minutes) and RAM (GB)',
-       x = 'Number of sqrt(total pixels)', 
+       x = 'Number of sqrt(total) pixels', 
        y = 'RAM in GB  // Time in minutes', 
        color = 'Number of points',
        shape = 'Software', linetype = 'Software') +
@@ -115,3 +115,59 @@ ggplot(subset(result), #, func == 'mat' & variable == 'ramgb'),
 
 
 write.csv(result, 'N:/Mi unidad/git/connecting-landscapes/performance-tests/results_42scenarios.csv')
+rescola <- read.csv('N:/Mi unidad/git/connecting-landscapes/performance-tests/results_42scenarios.csv')
+head(rescola)
+tail(rescola)
+lm_ram <- lm(value ~ npix + npts + func + soft, data = rescola[rescola$var == 'RAM (GB)', ])
+lm_min <- lm(value ~ npix + npts + func + soft, data = rescola[rescola$var == 'CPU time (minutes)', ])
+
+predDF <- data.frame(npix = 20000000,
+                     npts = 14500,
+                     func = c('lcc', 'crk', 'mat'), soft = 'COLA')
+cbind(predSce, 
+      CPUh = predict(lm_min, predDF)/60, 
+      RAM = predict(lm_ram, predDF), 
+      deparse.level = 0)
+
+unique(rescola$npts)
+unique(rescola$npix)
+
+subset(rescola, npix == 4000000 & func == 'lcc' &
+         npts == 500  & soft == 'COLA')
+       
+predDF <- data.frame(npix = 4000000,
+                     npts = 500,
+                     func = c('lcc', 'crk', 'mat'), 
+                     soft = 'COLA')
+cbind(predDF, 
+      CPUh = predict(lm_min, predDF), 
+      RAM = predict(lm_ram, predDF), 
+      deparse.level = 0)
+
+
+
+
+
+(smalldat <- subset(rescola, func == 'lcc' & soft == 'COLA' & var == 'RAM (GB)'
+                   & npts == 500
+                   #& npix == 4000000
+))
+summary( lm(value ~ npix + npts , data = smalldat) )
+plot(smalldat$npix, smalldat$value)
+
+plot(smalldat[c('npix', 'value')], 
+     col = smalldat$npts, 
+     pch = smalldat$npts)
+
+predDF <- data.frame(npix = 1e+05,
+                     npts = 500,
+                     func = c('lcc', 'crk', 'mat'), 
+                     soft = 'COLA')
+cbind(predDF, 
+      CPUh = predict(lm_min, predDF), 
+      RAM = predict(lm_ram, predDF), 
+      RAM2 = predict(
+        lm(value ~ npix + npts , data = smalldat),
+                     subset(predDF, func == 'lcc') ) )
+
+subset(smalldat, npix == 1e+05 & npts == 500)
