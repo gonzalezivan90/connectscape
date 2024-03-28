@@ -1,4 +1,9 @@
 
+
+## This file instal COLA conda environment + python libraries, using miniconda in R
+## Run all with: 
+## (source("https://raw.githubusercontent.com/gonzalezivan90/connectscape/main/R_pkg_install.R"))
+  
 ## Step 0 --- Install reticulate
 if (!require(reticulate)){
   install.packages('reticulate')
@@ -130,10 +135,11 @@ download.file('https://raw.githubusercontent.com/gonzalezivan90/connectscape/mai
 download.file('https://raw.githubusercontent.com/gonzalezivan90/connectscape/main/cola_functions.py', destfile = 'cola_functions.py')
 readLines(tempPy)
 
+## Run the script that loads all the libraries
 (test_cmd <- paste( pyCola, tempPy))
 system( test_cmd )
 
-
+## Try import py libs
 (test_cmd2 <- paste( pyCola, ' -c "import ', 
                      paste0(
                        gsub(replacement = 'skimage', pattern = 'scikit-image', libs2Install), 
@@ -143,6 +149,7 @@ system( test_cmd )
 system( test_cmd2 )
 (test_cmd3 <- paste( pyCola, ' -c "import cola_functions as cf; print(1)'))
 system( test_cmd3 )
+
 
 if(!require("devtools")){
   install.packages("devtools")
