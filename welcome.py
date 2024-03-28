@@ -28,7 +28,6 @@ from skimage.segmentation import watershed
 from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KernelDensity
 import base64
-import cola_functions as cf
 import gc
 import geopandas as gpd
 import glob
@@ -50,3 +49,4 @@ import tables
 import tables as tb
 import time
 print ("WELCOME -- libraries loaded succesfully")
+import cola_functions as cf
