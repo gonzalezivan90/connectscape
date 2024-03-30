@@ -49,4 +49,8 @@ import tables
 import tables as tb
 import time
 print ("WELCOME -- libraries loaded succesfully")
+import os; 
+print ("---- WD:")
+print(os.getcwd())
 import cola_functions as cf
+print (" cola_functions loadedS")

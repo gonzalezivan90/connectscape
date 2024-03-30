@@ -26,10 +26,17 @@ py_discover_config() ##  Python version
 
 envname <- 'cola'
 
+## Error -- no name of conda under "conda info --envs"
+# (base) C:\Users\Admin>conda activate C:\Users\Admin\AppData\Local\r-miniconda\envs\cola # activate unnamed env
+# conda config --append envs_dirs C:\Users\gonza\AppData\Local\r-miniconda\envs ## add unamed envs
+# conda info --envs
+#https://stackoverflow.com/questions/57527131/conda-environment-has-no-name-visible-in-conda-env-list-how-do-i-activate-it-a
 
 # Step2. Install your environment
 if (! envname %in% condaLists$name){
-  system.time(conda_create("cola"))
+  system.time(conda_create(envname = envname))
+  
+  #+ "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "create" "--yes" "--name" "cola2" "python=3.8" "--quiet" "-c" "conda-forge"
   
   # reticulate::py_list_packages(envname = 'cola') # dont use
   # reticulate::conda_create vs  py_install vs conda_install
@@ -38,16 +45,17 @@ if (! envname %in% condaLists$name){
   #reticulate::conda_create( envname = 'cola',forge = TRUE,   channel = "conda-forge",
   #  packages = c( 'pandas',  'cython', 'geopandas', 'numba' ) )
   
+  # Error; cola exist but not recognized as conda env- needs to be removed 
 }
 
 (condaLists <- reticulate::conda_list())
 # conda_remove(envname = 'cola')
 
 ## Python version
-(pyCola <- subset(condaLists, name == 'cola')$python)
+(pyCola <- subset(condaLists, name == envname)$python)
 
 ## list packages
-reticulate::py_list_packages(envname = 'cola')
+reticulate::py_list_packages(envname = envname)
 {
 #            package      version                requirement     channel
 # 1            bzip2        1.0.8                bzip2=1.0.8 conda-forge
@@ -83,12 +91,12 @@ libs2Install <- c(  'gdal', 'h5py',
                     #'geopandas-base',
                     #'geopandas==0.14.0',
                     'geopandas',
-                    'KDEpy', # problem
+                    'kdepy', # problem 'KDEpy',
                     'scikit-image')
 
 avLibs <- reticulate::py_list_packages(envname = envname)
-for( l in 1:length(libs2Install)){ # l = 8
-  (lib2inst <- libs2Install[l])
+for( l in 1:length(libs2Install)){ # l = 12
+  (lib2inst <- libs2Install[l]) #
   if( ! lib2inst %in% avLibs$package ){
     print(paste0(' --- Installing ',  libs2Install[l]))
     logPkg <- tryCatch(reticulate::py_install( envname = envname, 
@@ -96,6 +104,15 @@ for( l in 1:length(libs2Install)){ # l = 8
                                      channel = "conda-forge",
                                      packages = lib2inst), 
              error = function (e) e)
+    
+    ## If there's a problem installing trought conda-forge, use PIP
+    if( any(!is.null(logPkg)) ){
+      print(lib2inst)
+      logPkg2 <- tryCatch(reticulate::py_install( envname = envname, 
+                                                 pip = TRUE,
+                                                 packages = lib2inst), 
+                         error = function (e) e)
+    }
     avLibs <- reticulate::py_list_packages(envname = envname)
   }
 }
@@ -118,18 +135,11 @@ libs2Install[!libs2Install %in% avLibs$package]
 ## Error -- problem with rasterio
 # https://gis.stackexchange.com/questions/417733/unable-to-import-python-rasterio-package-even-though-it-is-installed
 
-
-## Error -- no name of conda under "conda info --envs"
-# (base) C:\Users\Admin>conda activate C:\Users\Admin\AppData\Local\r-miniconda\envs\cola # activate unnamed env
-# conda config --append envs_dirs C:\Users\Admin\AppData\Local\r-miniconda\envs ## add unamed envs
-  
-#https://stackoverflow.com/questions/57527131/conda-environment-has-no-name-visible-in-conda-env-list-how-do-i-activate-it-a
-
-
 # Step4. Get Git package
 # curl::curl_download()
 # download.packages()
 tempPy <- paste0(tempfile(), '.py')
+# tempPy <- 'N:/My Drive/git/connectscape/welcome.py'
 tempPyFun <- paste0(tempfile(), '.py')
 download.file('https://raw.githubusercontent.com/gonzalezivan90/connectscape/main/welcome.py', destfile = tempPy)
 download.file('https://raw.githubusercontent.com/gonzalezivan90/connectscape/main/cola_functions.py', destfile = 'cola_functions.py')
@@ -150,6 +160,9 @@ system( test_cmd2 )
 (test_cmd3 <- paste( pyCola, ' -c "import cola_functions as cf; print(1)'))
 system( test_cmd3 )
 
+
+## Find where files are installed and create sys.env parameter
+## append sys.env path
 
 if(!require("devtools")){
   install.packages("devtools")
